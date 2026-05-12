@@ -1,0 +1,947 @@
+════════════════════════════════════════════════════════════════════
+   數論（一）期末報告 — Ring-LWE 與理想格密碼學
+   口頭報告稿 (Bilingual Speaker Script · 中英對照)
+
+   黃崇晉  L16141149
+   2026 春季  ·  國立成功大學
+
+   總時長：約 45 分鐘
+   ─ Section 1  RSA/ECC + Motivation        10 分鐘
+   ─ Section 2  Lattices & Geometry          10 分鐘
+   ─ Section 3  Cyclotomic Fields            10 分鐘
+   ─ Section 4  LWE & Ring-LWE               10 分鐘
+   ─ Section 5  Applications                  5 分鐘
+════════════════════════════════════════════════════════════════════
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 1  ·  標題頁 (Title)                                       ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+老師、各位同學大家好。我是黃崇晉，學號 L16141149。今天要報告的題目
+是「Ring-LWE 與理想格密碼學 — 代數數論與後量子安全的交匯」。這份報
+告以課程內容為主軸，從格的幾何、分圓域的代數結構、LWE 的雜訊學習問
+題，一路串到 2024 年 NIST 公布的後量子密碼標準。整份報告的核心想表
+達一件事：代數數論並不只是抽象的工具，它正在直接決定我們未來幾十年
+的網路安全基礎。
+
+[English]
+Good day, professor and fellow classmates. My name is Chung-Chin
+Huang, student ID L16141149. The topic of today's presentation is
+"Ring-LWE and Ideal Lattice Cryptography — Algebraic Number Theory
+Meets Post-Quantum Security." Following the course themes, I will
+walk through the geometry of lattices, the algebraic structure of
+cyclotomic fields, the Learning-With-Errors problem, and finally
+the 2024 NIST post-quantum standards. The central message: algebraic
+number theory is not merely an abstract tool — it is shaping the
+security infrastructure of the next decades.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 2  ·  Section 1 標題頁                                     ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+第一節，我們先回到動機：為什麼需要後量子密碼學？接下來十分鐘會交代
+RSA 與 ECC 的基本原理、Shor 演算法為何同時破解兩者，以及為什麼格密
+碼學成為當前最有希望的解方。
+
+[English]
+Section 1: motivation. In the next ten minutes I will recall the
+basic structure of RSA and ECC, explain why Shor's algorithm breaks
+both at once, and outline why lattice-based cryptography has emerged
+as the leading post-quantum candidate.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 3  ·  RSA — 整數分解                                       ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+先看 RSA。1977 年提出，是最廣泛部署的公鑰系統之一。公鑰是兩個大質
+數的乘積 N 加上指數 e；私鑰是模 φ(N) 的逆元 d。安全性建立在「整數
+分解問題」上：給你 N，要還原 p 與 q 是困難的。古典最佳演算法是
+General Number Field Sieve，亞指數時間，目前 RSA-2048 仍被認為安
+全。今天的 HTTPS、銀行系統、SSH 全部仰賴這個假設。
+
+[English]
+First, RSA. Proposed in 1977, it is one of the most widely deployed
+public-key systems. The public key is a product of two large primes
+N together with an exponent e; the private key is the inverse of e
+modulo φ(N). Its security rests on the integer factoring problem:
+given N, recovering p and q is believed hard. The best classical
+algorithm is the General Number Field Sieve, sub-exponential in
+log N. RSA-2048 is still considered secure today, and HTTPS, banking
+systems, and SSH all depend on this assumption.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 4  ·  ECC — ECDLP                                          ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+第二個是橢圓曲線密碼 ECC。1985 年由 Miller 與 Koblitz 各自提出。把
+有限體上的橢圓曲線 y² = x³ + ax + b 上的點看成阿貝爾群，公鑰是 Q =
+kP，私鑰是純量 k。安全性建基於橢圓曲線離散對數問題 ECDLP。優點是
+金鑰小：256-bit ECC 安全強度約等於 3072-bit RSA。古典最佳演算法是
+Pollard rho，平方根時間。ECDSA 用於 TLS 憑證、區塊鏈簽章。
+
+[English]
+Second, Elliptic Curve Cryptography, proposed independently by
+Miller and Koblitz in 1985. The points on a finite-field elliptic
+curve y² = x³ + ax + b form an abelian group; the public key is
+Q = kP, the secret is the scalar k. Its security rests on the
+elliptic curve discrete logarithm problem. The advantage is short
+keys: a 256-bit ECC key offers security comparable to 3072-bit
+RSA. The best classical algorithm is Pollard rho, with square-root
+running time. ECDSA underlies TLS certificates and blockchain
+signatures.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 5  ·  Shor 演算法 (1994)                                   ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+1994 年，Peter Shor 在 FOCS 發表一個量子演算法，把整數分解和離散對
+數同時化為「求週期」問題，再用量子傅立葉轉換以多項式時間求出。後果
+非常嚴重：對 RSA-2048，古典 GNFS 是亞指數時間，量子 Shor 只需要約
+log N 立方時間；對 ECDLP，古典 Pollard rho 是平方根，量子 Shor 同樣
+是 log n 立方。也就是說，一旦我們造出夠大的容錯量子電腦，RSA、
+Diffie-Hellman、ECC 三者會「同時」失效，沒有一個能撐住。
+
+[English]
+In 1994, Peter Shor presented a quantum algorithm at FOCS that
+reduces both integer factoring and discrete logarithm to a period-
+finding problem, and solves them in quantum polynomial time using
+the quantum Fourier transform. The consequences are severe. For
+RSA-2048, classical GNFS is sub-exponential, while quantum Shor
+runs in roughly cubic time in log N. For ECDLP, the classical
+square-root running time becomes cubic in log n on a quantum
+computer. In other words, once a sufficiently large fault-tolerant
+quantum computer exists, RSA, Diffie–Hellman, and ECC will fall
+together — none of them survives.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 6  ·  Harvest Now, Decrypt Later                           ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+威脅其實不需要等到量子電腦造好。攻擊者今天就可以攔截並保存密文，等
+到未來量子電腦上線後再解密 — 這就是「harvest now, decrypt later」，
+先攔截後解密。對於生命週期長的機密 — 醫療紀錄、外交電文、商業機密、
+身分認證金鑰 — 這個威脅已經存在。NIST 預估 2030 到 2035 年量子電
+腦可能達到破解規模，因此後量子密碼的部署必須提前 — 這是現在進行式。
+
+[English]
+The threat does not actually require a working quantum computer
+today. An adversary may intercept and store ciphertexts now, then
+decrypt them once a quantum computer becomes available — this is
+called "harvest now, decrypt later." For long-lived secrets such as
+medical records, diplomatic cables, trade secrets, and identity
+keys, this threat is already present. NIST estimates that quantum
+computers capable of breaking these schemes may appear between
+2030 and 2035. Post-quantum cryptography must therefore be
+deployed in advance — this is happening right now.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 7  ·  解方：格密碼學                                       ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+這就帶到格密碼學。1996 年 Ajtai 給出第一個 worst-case 到 average-
+case 的歸約，把格上某些「困難問題」轉成隨機實例的安全保證；2005 年
+Regev 提出 Learning With Errors，是第一個有效的後量子公鑰加密候選；
+2010 年 Lyubashevsky、Peikert、Regev 三人結合代數數論，把整數向量
+換成數環中的元素，提出 Ring-LWE。Ring-LWE 把公鑰大小從 n 平方縮為
+線性 n、把乘法從 n 平方加速到 n log n — 兼得安全與效率。
+
+[English]
+This leads to lattice-based cryptography. In 1996, Ajtai gave the
+first worst-case to average-case reduction for lattice problems,
+turning hard lattice problems into security guarantees for random
+instances. In 2005, Regev introduced Learning With Errors, the
+first efficient post-quantum public-key encryption candidate. In
+2010, Lyubashevsky, Peikert, and Regev combined this with
+algebraic number theory: replacing integer vectors with elements
+of a number ring, they proposed Ring-LWE. Ring-LWE shrinks public
+keys from quadratic to linear in n, and accelerates multiplication
+from n² to n log n — gaining both security and efficiency.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 8  ·  Section 1 小結                                       ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+小結 Section 1：RSA 和 ECC 的安全性建基於整數分解和 ECDLP；Shor 演
+算法量子多項式破解兩者；格上的 SVP 量子難解，是新的安全基石；LWE
+具備強的安全歸約但公鑰太大；Ring-LWE 用代數結構解決效率問題。下一
+節我們進入格的幾何，看看為什麼 SVP 困難。
+
+[English]
+To summarise Section 1: RSA and ECC rest on factoring and ECDLP;
+Shor's algorithm breaks both in quantum polynomial time; lattice
+SVP is believed quantum-hard, making it a new foundation; LWE has
+strong security reductions but large public keys; Ring-LWE uses
+algebraic structure to recover efficiency. Next, Section 2: the
+geometry of lattices, and why SVP is hard.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 9  ·  Section 2 標題頁                                     ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+第二節，格與幾何數論。接下來十分鐘會建立格的基本語言、介紹三大困難
+問題、並花一些時間仔細推導 Minkowski 第一定理如何給出最短向量的長度
+上界 — 這是這節的重點。
+
+[English]
+Section 2: lattices and the geometry of numbers. Over the next ten
+minutes, I will set up the language of lattices, introduce three
+fundamental hard problems, and spend some time carefully deriving
+how Minkowski's first theorem yields an upper bound on the shortest
+vector — this is the centrepiece of the section.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 10  ·  格 (Lattice) 的定義                                 ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+什麼是格？把實數空間 R^n 中 n 個線性獨立的向量 b1 到 bn 取整數線性
+組合，所得的集合 L 就是一個格 — 它是 R^n 的離散加法子群。基底矩陣
+B 把這些向量並排，覆積定義為 |det B|，這是與基底選擇無關的不變量，
+幾何上代表一個基本胞的體積。相繼極小 λ_i 是「能裝進球裡的格點還能
+維持 i 維生成」的最小半徑。最關鍵的是 λ_1：第一個非零最短向量的長
+度。
+
+[English]
+What is a lattice? Take n linearly independent vectors b₁ through
+bₙ in Rⁿ, and form all integer linear combinations: this discrete
+additive subgroup is a lattice L. The basis matrix B places these
+vectors as columns, and the covolume is defined as the absolute
+value of det B — an invariant independent of the chosen basis,
+representing the volume of a fundamental cell. The successive
+minima λ_i is the smallest radius such that a ball of that radius
+intersected with the lattice still spans an i-dimensional subspace.
+The most important is λ_1: the length of the shortest nonzero
+lattice vector.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 11  ·  格上的困難問題                                       ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+格上有三大困難問題。第一個是 SVP — 最短向量問題：找一個非零格點
+v，長度不超過 γ 倍的 λ_1。第二個是 GapSVP，決策版本：判斷 λ_1 是
+小於等於 1，還是大於 γ。第三個是 BDD — 有界距離解碼：給一個離格
+不太遠的點 t，找最近的格點。在小近似因子 γ 下，目前最佳的古典演算
+法和量子演算法都需要 2 的 n 次方時間，沒有人知道怎麼做更快。實作上
+最廣泛使用的是 BKZ 結合 sieving 演算法。
+
+[English]
+There are three central hard problems on lattices. First, SVP, the
+shortest vector problem: find a nonzero lattice vector v of length
+at most γ times λ_1. Second, GapSVP, the decision variant:
+distinguish whether λ_1 is at most one or greater than γ. Third,
+BDD, bounded distance decoding: given a target t close to the
+lattice, find the nearest lattice point. At small approximation
+factor γ, the best classical and quantum algorithms both require
+exponential time, two to the n. In practice, BKZ combined with
+sieving is the standard approach.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 12  ·  Minkowski 第一定理                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+現在進入 Minkowski 第一定理 — 這是幾何數論的奠基結果。陳述是這樣：
+若 S 是 R^n 中的中心對稱凸體，且體積大於 2^n 倍的覆積，那麼 S 必含
+非零格點。三個關鍵詞：中心對稱表示對任何 x 屬於 S，-x 也在 S 中；
+凸體表示任兩點線段含於 S，且 S 是有界閉集；體積條件 vol(S) > 2^n
+det(L) 是必要的臨界條件 — 等號時不一定成立。下一頁我們把它套到一個
+具體的立方體上，推得最短向量的上界。
+
+[English]
+Now Minkowski's first theorem — the cornerstone of the geometry of
+numbers. Statement: if S is a centrally symmetric convex body in
+Rⁿ with volume strictly greater than 2ⁿ times the lattice covolume,
+then S must contain a nonzero lattice point. Three keywords:
+centrally symmetric means x in S implies -x in S; convex body means
+the line segment between any two points of S lies in S, and S is
+bounded and closed; the volume condition is the critical threshold —
+strict inequality is essential. Next slide: we apply this to a
+specific cube to derive the shortest-vector bound.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 13  ·  推導 SVP 上界 — Step 1                              ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+取中心對稱立方體 C_r 等於 [-r, r]^n，每邊長 2r，體積等於 (2r) 的 n
+次方。Minkowski 定理需要的條件是：vol(C_r) > 2^n det(L)，也就是
+(2r)^n > 2^n det(L)，等價於 r > det(L) 的 n 分之一次方。所以只要 r
+取得比 det(L) 的 n 分之一次方稍微大一點點，立方體 C_r 就一定含有一
+個非零格點 v。注意這個 v 屬於立方體，所以它的「無窮範數」— 也就是
+最大座標絕對值 — 不超過 r。
+
+[English]
+Take the centred cube C_r equal to the closed interval [-r, r] in
+each coordinate; each side has length 2r, and the volume equals
+(2r) raised to n. Minkowski's condition becomes (2r)^n strictly
+greater than 2^n det(L), which simplifies to r strictly greater
+than det(L) to the one over n. Therefore, whenever r exceeds this
+threshold even slightly, the cube C_r must contain a nonzero
+lattice vector v. Notice that v lies in the cube, so its
+infinity-norm — the maximum coordinate in absolute value — is at
+most r.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 14  ·  推導 SVP 上界 — Step 2 + 結論                       ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+接下來用一個標準的範數不等式：對任何 R^n 中的向量 v，「歐式範數」不
+超過根號 n 倍的「無窮範數」。把 Step 1 的 ‖v‖∞ ≤ r 代入，得到 ‖v‖_2
+≤ √n · r。這對任何滿足 r > det(L) 的 n 分之一次方都成立。讓 r 從上
+方逼近 det(L) 的 n 分之一次方，就得到結論：λ_1(L) ≤ √n · det(L) 的
+n 分之一次方。這就是 Minkowski 給的最短向量長度上界。Hermite 常數
+γ_n 可以給出更緊的版本，γ_n 的漸近上界是 2n 除以 πe，但 √n 已經夠
+我們在 Ring-LWE 的安全分析中使用。
+
+[English]
+Next, a standard norm inequality: for any vector v in Rⁿ, the
+Euclidean norm is at most the square root of n times the infinity
+norm. Substituting from Step 1, the infinity norm of v is at most
+r, so its Euclidean norm is at most square root of n times r. This
+holds for every r exceeding det(L) to the one over n. Letting r
+descend to that threshold, we obtain the conclusion: λ_1 of L is
+at most square root of n times det(L) to the one over n. This is
+Minkowski's upper bound on the shortest vector. The Hermite
+constant γ_n yields a tighter version, with asymptotic upper bound
+two n over π e, but the simple square-root-n bound suffices for
+our Ring-LWE security analysis.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 15  ·  Section 2 小結                                      ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+Section 2 小結。格是 R^n 的離散加法子群；覆積與相繼極小是核心不變
+量；SVP、GapSVP、BDD 是三大困難問題；Minkowski 凸體定理直接給出最
+短向量的上界。這節最重要的訊息是：這個上界把「幾何上的覆積」與「算
+術上的最短向量」連在一起 — 這是 Course Objective 5 的核心，也是接下
+來把分圓域裡的「理想」變成「理想格」、再餵給 Ring-LWE 的關鍵橋樑。
+
+[English]
+Summary of Section 2. A lattice is a discrete additive subgroup of
+Rⁿ; covolume and successive minima are the key invariants; SVP,
+GapSVP, BDD are the three central hard problems; and Minkowski's
+convex body theorem directly yields the shortest-vector upper
+bound. The take-away of this section: this bound bridges the
+geometric covolume with the arithmetic shortest vector — the heart
+of Course Objective 5, and the bridge we will use to turn ideals
+in cyclotomic fields into ideal lattices, which then feed into
+Ring-LWE.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 16  ·  Section 3 標題頁                                    ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+第三節，分圓域與理想格。接下來十分鐘介紹一般的 n 次分圓域與分圓多
+項式，然後特殊化到 power-of-two 情形 m = 2^k，討論質理想分裂、
+trace、norm、判別式，最後用標準嵌入把理想變成幾何上的滿秩格。
+
+[English]
+Section 3: cyclotomic fields and ideal lattices. The next ten
+minutes introduce general n-th cyclotomic fields and cyclotomic
+polynomials, specialise to the power-of-two case m equals two to
+the k, discuss prime ideal splitting, trace, norm, and the
+discriminant, and finally use the canonical embedding to turn
+ideals into full-rank geometric lattices.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 17  ·  一般 n-th cyclotomic field                          ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+先看一般情形。對任意正整數 n，本原 n 次單位根 ζ_n 定義為 e 的 2πi/n
+次方 — 在複平面上，它是單位圓上的 n 等分點。它滿足 ζ_n^n = 1，但對
+所有小於 n 的正整數 k，ζ_n^k 不為 1。第 n 個分圓多項式 Φ_n(x) 定
+義為所有「跟 n 互質」的本原單位根的乘積：x − ζ_n^k，跑遍所有
+gcd(k,n) = 1 的 k。這是一個首一、整係數、在有理數上不可約的多項式，
+次數是 Euler totient 函數 φ(n)。
+
+[English]
+Start with the general case. For any positive integer n, the
+primitive n-th root of unity ζ_n is defined as e to the two pi i
+over n — geometrically, an n-th equidistant point on the unit
+circle. It satisfies ζ_n^n equals one, but for every positive
+integer k less than n, ζ_n^k is not one. The n-th cyclotomic
+polynomial Φ_n of x is defined as the product of x minus ζ_n^k,
+ranging over all k coprime to n. This is a monic polynomial with
+integer coefficients, irreducible over the rationals, of degree
+equal to Euler's totient φ(n).
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 18  ·  分圓多項式範例                                      ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+看幾個小例子體會一下。Φ_1 = x − 1，因為唯一的「本原 1 次單位根」就
+是 1。Φ_2 = x + 1，本原是 −1。Φ_3 = x² + x + 1，是次數 2 的不可約
+多項式。Φ_4 = x² + 1，注意這是高斯整數環的最小多項式。Φ_5 是次數 4
+的多項式 x^4 + x^3 + x^2 + x + 1。Φ_6 = x² − x + 1。最關鍵的是
+Φ_8 = x^4 + 1，再來是 Φ_12 = x^4 − x² + 1。注意一個漂亮的事實：當
+n 是 2 的次方時，Φ_{2^k}(x) = x^(2^(k−1)) + 1 — 形式特別簡單，這
+正是 Ring-LWE 實作首選 power-of-two cyclotomic 的原因。
+
+[English]
+Some small examples. Φ_1 equals x minus 1, since the only primitive
+first root of unity is 1. Φ_2 equals x plus 1, with primitive root
+minus 1. Φ_3 equals x squared plus x plus 1, an irreducible
+quadratic. Φ_4 equals x squared plus 1 — the minimal polynomial of
+the Gaussian integers. Φ_5 has degree 4, x to the fourth plus all
+lower terms. Φ_6 equals x squared minus x plus 1. Most importantly,
+Φ_8 equals x to the fourth plus 1, and Φ_12 equals x to the fourth
+minus x squared plus 1. Note a beautiful fact: when n is a power of
+2, Φ_{2^k} of x equals x to the (2^{k-1}) plus 1 — an especially
+clean binomial form. This is precisely why power-of-two cyclotomics
+are the implementations of choice for Ring-LWE.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 19  ·  分圓域 K 與整數環 O_K                               ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+第 n 個分圓域 K = Q(ζ_n) 是由 ζ_n 所生成的有理數體擴張，其度數是
+φ(n)。它的整數環 O_K 等於 Z[ζ_n] — 注意這是一個非平凡結果，並非
+所有的「域擴張」整數環都等於「相鄰」整數所生成的環，但對分圓域成
+立。這個整數環是 Dedekind domain — Course Obj. 1, 2 — 性質是：
+Noetherian、整封閉、Krull 維度 1。最關鍵的性質是每個非零理想可以
+唯一分解為質理想的乘積。我們在整數 Z 上失去的「元素的唯一分解」，
+在 Dedekind domain 上以「理想的唯一分解」回歸 — 這是代數數論最深
+刻的洞見之一。
+
+[English]
+The n-th cyclotomic field K equals Q(ζ_n), the field generated by
+ζ_n over the rationals, with degree φ(n). Its ring of integers O_K
+equals Z[ζ_n] — a non-trivial result, since it is not generally
+true that adjoining a generator to Z gives the full ring of
+integers, but it does hold for cyclotomic fields. This ring of
+integers is a Dedekind domain — Course Objectives one and two —
+meaning: Noetherian, integrally closed, Krull dimension one. The
+crucial property is that every nonzero ideal admits a unique
+factorisation into prime ideals. The unique factorisation of
+elements that we lose in general number rings returns at the level
+of ideals in a Dedekind domain — one of the deepest insights of
+algebraic number theory.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 20  ·  特殊化至 m = 2^k                                    ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+從這裡開始我們特殊化到 power-of-two 情形：m = 2^k，k ≥ 2。原因如前
+所述，分圓多項式 Φ_m(x) = x^(2^(k-1)) + 1，形式最簡。為了和 Ring-
+LWE 文獻一致，從這裡開始用 LPR 的記號慣例：m 代表「分圓指標」，n
+記為 φ(m) = 2^(k-1)，代表「域度 [K : Q]」。具體例子：k = 2，m = 4，
+n = 2，K = Q(i)；k = 3，m = 8，n = 4；實用尺寸像 k = 10，m = 1024，
+n = 512，這就是 Kyber 之類密碼方案的典型維度。
+
+[English]
+From here on, we specialise to the power-of-two case: m equals two
+to the k, with k at least two. As mentioned, Φ_m of x equals x to
+the (2^{k-1}) plus 1 — the simplest form. To stay consistent with
+the Ring-LWE literature, we adopt the LPR notational convention
+from now on: m denotes the cyclotomic index, while n equals φ(m)
+equals 2^{k-1} denotes the field degree [K : Q]. Concrete examples:
+k equals 2 gives m equals 4, n equals 2, K equals Q of i; k equals
+3 gives m equals 8, n equals 4. A practical size is k equals 10,
+m equals 1024, n equals 512 — the typical dimension for schemes
+like Kyber.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 21  ·  質理想分裂 (Course Obj. 3)                          ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+分圓域中的質理想分裂有非常乾淨的描述。對於不整除 m 的有理質數 p，令
+f 是 p 在 (Z/m)* 中的乘法階。則 p O_K 在 K 中分解成 g = n / f 個相
+異質理想的乘積，每個的 inertia degree 是 f，分歧指標是 1。對於 p =
+2 — 這是 m = 2^k 時唯一的分歧質數 — 我們有 2 O_K 等於 (1 − ζ_m)
+的 n 次方，是「完全分歧」的。Ring-LWE 的關鍵設計選擇：取 q 為質數
+且 q ≡ 1 mod m。這時 f = 1，q 在 K 中「完全分裂」為 n 個相異質理
+想；這直接對應到下一節要看的 NTT 結構。
+
+[English]
+Prime splitting in cyclotomic fields admits a very clean
+description. For a rational prime p not dividing m, let f be the
+multiplicative order of p modulo m in (Z/m)*. Then p O_K
+factorises into g equals n over f distinct prime ideals in K, each
+of inertia degree f and ramification index one. For p equals two —
+the unique ramified prime when m is a power of two — we have two
+O_K equals one minus ζ_m to the n-th power, which is totally
+ramified. The key design choice in Ring-LWE: pick q prime
+satisfying q congruent to one modulo m. Then f equals one and q
+splits completely into n distinct prime ideals in K — this directly
+corresponds to the NTT structure we will see shortly.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 22  ·  Trace, Norm, Discriminant                           ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+四個基本不變量：trace 跡是 α 在所有嵌入下的像之和；norm 範數是所有
+像之乘積。Different 差理想 d^(-1) 的定義是：所有 α 使得 Tr(α O_K)
+落在 Z 中。判別式 Δ_K 等於 different 的範數。對 power-of-two
+cyclotomic m = 2^k，可以算出 |Δ_K| = 2 的 n(k − 1) 次方；其平方
+根 √|Δ_K| = 2 的 n(k − 1)/2 次方 — 這個量會在下一頁的「理想格覆
+積」公式中出現。具體地，m = 8、n = 4、k = 3 時，|Δ_K| = 2^8 =
+256，√|Δ_K| = 16。直觀上，判別式測量了「整數環的扭曲程度」：分歧
+質數恰是 Δ_K 的質因子。
+
+[English]
+Four basic invariants. The trace of α is the sum over all field
+embeddings of σ_i of α; the norm is the product over all embeddings.
+The different inverse, denoted by a fraktur d to the minus one, is
+defined as the set of α such that the trace of α times O_K lies in
+Z. The discriminant Δ_K equals the norm of the different. For
+power-of-two cyclotomics, the absolute discriminant equals two to
+the n times k minus one, and its square root equals two to the n
+times k minus one over two. This quantity will appear in the ideal
+lattice covolume formula on the next slide. For m equals 8, n
+equals 4, k equals 3: the discriminant is 2 to the eighth, equals
+256, and its square root is 16. Intuitively, the discriminant
+measures how distorted the ring of integers is: the ramified primes
+are exactly the prime factors of Δ_K.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 23  ·  Canonical Embedding — 把代數翻譯為幾何              ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+現在到了 Section 3 的關鍵時刻：把代數結構翻譯為幾何結構。分圓域是
+totally complex，r_1 = 0，r_2 = n/2。標準嵌入 σ 把 K 嵌入到 K
+tensor R，再透過複數的實虛分量映到 R^n — 採 Minkowski normalisation，
+每個複位用 √2 倍實部與虛部。這個嵌入的關鍵性質是：每一個非零理想
+a ⊆ O_K，在 σ 下都成為 R^n 中的一個「滿秩理想格」，其覆積等於
+N(a) 乘以 √|Δ_K|。這個公式把「範數」與「覆積」、把「代數」與「幾
+何」連在一起 — Ring-LWE 的安全性即建基於此：理想格上的 SVP 仍是
+量子困難的。
+
+[English]
+Here is the pivotal moment of Section 3: translating algebra into
+geometry. Cyclotomic fields are totally complex: r_1 equals zero,
+r_2 equals n over two. The canonical embedding σ embeds K into K
+tensor R, and via the real and imaginary parts of each complex
+embedding, into Rⁿ — under the Minkowski normalisation, each
+complex place is scaled by square root two times the real part and
+square root two times the imaginary part. The key property of this
+embedding: every nonzero ideal a in O_K becomes a full-rank ideal
+lattice in Rⁿ under σ, with covolume equal to the norm of a times
+the square root of the absolute discriminant. This formula links
+norm with covolume, algebra with geometry — and Ring-LWE's
+security rests on the fact that SVP on these ideal lattices remains
+quantum-hard.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 24  ·  Worked Example：m = 8, n = 4                        ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+用一個具體例子把 Section 3 串起來。取 m = 8、n = 4，這是最小的非平
+凡 power-of-two cyclotomic。分圓多項式 Φ_8 = x^4 + 1；K = Q(ζ_8)；
+整數環 O_K = Z[ζ_8]；判別式 |Δ_K| = 256，√|Δ_K| = 16。選 q = 17，
+因為 17 ≡ 1 mod 8。則 17 modulo 8 的階 f = 1，所以 g = 4：17 O_K
+完全分裂為 4 個相異質理想 q_1 q_2 q_3 q_4。等價地，R_17 := O_K /
+17 O_K 同構於 Z_17 的四份直積。這就是 NTT 結構的代數來源 — 我們會
+在 Section 4 看到計算上的對應。這個小例子完整地連結了 Course
+Objectives 1 到 4，加上 Course Objective 5 的理想格覆積。
+
+[English]
+Let us tie Section 3 together with a concrete example. Take m
+equals 8, n equals 4 — the smallest non-trivial power-of-two
+cyclotomic. The cyclotomic polynomial Φ_8 equals x to the fourth
+plus 1; K equals Q of ζ_8; the ring of integers is Z of ζ_8; the
+absolute discriminant is 256, and its square root is 16. Pick q
+equals 17, since 17 is congruent to 1 modulo 8. The order of 17
+modulo 8 is f equals 1, so g equals 4: 17 O_K splits completely
+into four distinct prime ideals q_1 q_2 q_3 q_4. Equivalently,
+R_17, defined as O_K modulo 17 O_K, is isomorphic to four copies
+of Z_17. This is the algebraic source of the NTT structure — we
+will see the computational counterpart in Section 4. This small
+example fully connects Course Objectives one through four, plus
+Course Objective five via the ideal lattice covolume.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 25  ·  Section 4 標題頁                                    ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+第四節，LWE 與 Ring-LWE。這是這份報告最重要的部分。接下來十分鐘從
+LWE 的直觀出發，給出形式定義與安全歸約，再把 Z^n 換為代數整數環，
+得到 Ring-LWE，並看到它如何利用代數結構壓縮公鑰、加速乘法。
+
+[English]
+Section 4: LWE and Ring-LWE. This is the most important part of
+the talk. Over the next ten minutes, I begin with the intuition of
+LWE, give the formal definition and security reduction, then
+replace Zⁿ with the ring of algebraic integers to obtain Ring-LWE,
+and show how it leverages algebraic structure to shrink public
+keys and accelerate multiplication.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 26  ·  LWE 直觀解釋                                        ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+先給直觀。LWE — Learning With Errors — 直觀地說，是「帶雜訊的線
+性方程組求解」。給定樣本 (a_i, b_i)，滿足 b_i ≈ <a_i, s> mod q，
+也就是內積關係，但每筆觀測都加了一個小的隨機誤差 e_i。目標是還原
+秘密向量 s。如果 e_i = 0 — 沒有雜訊 — 那就是高斯消去法，多項式時
+間可解，O(n^3)。但只要加上「小」雜訊，問題就突然變得指數困難 — 包
+括量子演算法在內目前都沒有有效解法。雜訊的存在「打破了線性結構」，
+這正是格密碼安全性的來源。
+
+[English]
+First the intuition. LWE — Learning With Errors — informally
+asks: solve a noisy linear system. Given samples a_i comma b_i
+where b_i is approximately the inner product of a_i and s modulo
+q, but each observation is perturbed by a small random error e_i,
+recover the secret vector s. If all e_i are zero — no noise —
+this is Gaussian elimination, polynomial-time, O of n cubed. But
+once we add even small noise, the problem suddenly becomes
+exponentially hard — and no efficient quantum algorithm is known
+either. The presence of noise breaks the linear structure, and
+this is precisely the source of lattice cryptography's security.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 27  ·  LWE 形式定義                                        ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+形式定義。固定維度 n、模數 q、誤差分布 χ — 通常取離散高斯，寬度
+αq，α 小於 1 除以根號 n。固定秘密 s 屬於 Z_q^n。每一個 LWE 樣本是
+一對 (a, <a, s> + e mod q)，其中 a 從 Z_q^n 上的均勻分佈抽取，e 從
+χ 抽取。Search-LWE 問題：給很多樣本，還原秘密 s。Decision-LWE 問題：
+區分這些樣本和均勻隨機。標準歸約告訴我們 Search 與 Decision 在多項
+式時間下等價。
+
+[English]
+The formal definition. Fix dimension n, modulus q, and an error
+distribution χ — typically discrete Gaussian of width α q with α
+less than one over root n. Fix a secret s in Z_q to the n. An LWE
+sample is a pair: a, together with the inner product of a and s
+plus e modulo q, where a is uniform over Z_q to the n and e is
+drawn from χ. Search-LWE asks: given many samples, recover s.
+Decision-LWE asks: distinguish these samples from uniform. A
+standard reduction shows search and decision are polynomially
+equivalent.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 28  ·  Regev 量子歸約                                      ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+Regev 在 2005 年給出最關鍵的安全歸約：解隨機 LWE 實例至少和解任意格
+上的 worst-case GapSVP 與 SIVP 一樣困難 — 近似因子 γ = Õ(n / α)。這
+個歸約的特殊之處在於：把「最壞情形」的困難性轉化為「平均情形」的安
+全性 — 這在密碼學中很罕見。歸約是「量子的」 — 它用到了量子傅立葉轉
+換 — 古典歸約至今仍是開放問題。意義是：要破解任何隨機產生的 LWE 實
+例，攻擊者必須能解任何「最壞」的格上 SVP — 這是非常強的安全保證。但
+LWE 有個顯著缺點：公鑰矩陣 A 大小是 O(n^2)、乘法 O(n^2)。下一頁的
+Ring-LWE 就是為了解決這個效率瓶頸而生。
+
+[English]
+In 2005, Regev gave the central security reduction: solving random
+LWE instances is at least as hard as solving worst-case GapSVP and
+SIVP on arbitrary lattices, with approximation factor γ equal to
+Õ of n over α. This reduction is remarkable in turning worst-case
+hardness into average-case security — a rare guarantee in
+cryptography. The reduction is quantum — it uses the quantum
+Fourier transform — and a classical version remains open. The
+implication: any attacker who can solve a random LWE instance must
+also be able to solve every worst-case lattice SVP. The drawback,
+however, is significant: the public key matrix A has size O of n
+squared, with O of n squared multiplication. Ring-LWE, on the next
+slide, is born to address exactly this efficiency bottleneck.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 29  ·  Ring-LWE — 提升至代數整數環                         ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+Ring-LWE 由 Lyubashevsky、Peikert、Regev 三人於 2010 年提出。把
+Z^n 換成分圓整數環 R = O_K = Z[x] / Φ_m(x) — 對 power-of-two 即
+Z[x] / (x^n + 1) — 並令 R_q := R / qR。codifferent R^∨ 是 different
+理想的反 — 對應 Course Obj. 4。Ring-LWE 樣本是一對 (a, a · s + e
+mod qR^∨)，其中 a 從 R_q 抽，e 是 K_R 上的高斯。秘密 s 在 R_q^∨
+中。對 power-of-two 情形，R^∨ = (1/n) R 是純量倍，dual 退化為簡單
+的縮放，得到「simplified Ring-LWE」 — 這是實作中常用的版本。安全歸
+約：Ring-LWE 至少和理想格上的 approx-SVP 一樣困難（量子歸約）。
+
+[English]
+Ring-LWE was introduced by Lyubashevsky, Peikert, and Regev in
+2010. Replace Zⁿ by the cyclotomic ring of integers R equals O_K
+equals Z of x modulo Φ_m of x — for power-of-two cyclotomics, this
+is Z of x modulo x to the n plus 1 — and define R_q as R modulo
+q R. The codifferent R-vee is the inverse of the different ideal —
+corresponding to Course Objective four. A Ring-LWE sample is a
+pair: a, together with a times s plus e modulo q R-vee, where a is
+uniform on R_q and e is Gaussian on K_R. The secret s lives in
+R_q-vee. For power-of-two cyclotomics, R-vee equals one over n
+times R, a scalar dilation; the dual collapses to a simple
+rescaling, yielding the simplified Ring-LWE used in practice. The
+security reduction: Ring-LWE is at least as hard as approximate
+SVP on ideal lattices — a quantum reduction.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 30  ·  質理想分裂的角色 — NTT 的代數來源                   ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+這是 Section 3 與 Section 4 連結的關鍵 slide。選 q 為質數且 q ≡ 1
+mod m — 此時分圓多項式 Φ_m(x) 在 Z_q 中分裂為 n 個相異一次因子 (x
+− ω_i)。透過中國剩餘定理，R_q = Z[x] / (Φ_m(x), q) 同構於 n 個 Z_q
+的直積。這個同構，就是 Number-Theoretic Transform（NTT），可以在
+O(n log n) 時間內計算 — 類比 FFT 之於普通卷積。乘法在 R_q 中變成
+NTT 域上的「逐點相乘」，再透過反向 NTT 回到原表示。幾何意義是：q O_K
+完全分裂為 n 個質理想 — 這就是 Course Obj. 3 直接轉化為演算法加速
+的具體實例。
+
+[English]
+This is the slide that links Sections 3 and 4. Pick q prime with
+q congruent to 1 modulo m — then Φ_m of x splits into n distinct
+linear factors x minus ω_i over Z_q. By the Chinese Remainder
+Theorem, R_q equals Z of x modulo Φ_m of x and q, isomorphic to
+the n-fold product of Z_q. This isomorphism is the Number-Theoretic
+Transform, NTT, computable in O of n log n — analogous to the FFT
+for ordinary convolution. Multiplication in R_q becomes pointwise
+multiplication after NTT, then inverse NTT brings the result back.
+Geometrically, q times O_K splits completely into n distinct prime
+ideals — this is a direct example of Course Objective three turning
+into an algorithmic speedup.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 31  ·  Negacyclic 卷積與公鑰大小節省                       ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+因為 Φ_m(x) = x^n + 1，在 R_q 中 x^n 等於 −1，所以乘法是 negacyclic
+convolution，不是普通的卷積。具體形式是：(a * b)_k 等於所有 i + j =
+k 的 a_i b_j 之和，減去所有 i + j = k + n 的 a_i b_j 之和 — 這個負
+號就是「nega」的由來。比較 LWE 和 Ring-LWE：公鑰大小從 O(n^2) 減為
+O(n)，省了一個 n 倍；乘法複雜度從 O(n^2) 加速到 O(n log n)，省了
+n / log n 倍；安全歸約從「任意格 SVP」變成「理想格 SVP」 — 比較弱，
+這是仍然開放的研究議題。Ring-LWE 用「結構」換取「效率」 — 這是現代
+密碼學最深刻的設計取捨之一。
+
+[English]
+Because Φ_m of x equals x to the n plus 1, in R_q we have x to the
+n equivalent to minus 1, so multiplication becomes negacyclic
+convolution, not ordinary convolution. Concretely, (a star b)_k
+equals the sum of a_i b_j over i plus j equals k, minus the sum
+over i plus j equals k plus n — the minus sign is the source of
+the name "nega". Comparing LWE and Ring-LWE: public key shrinks
+from O of n squared to O of n, a factor n saving; multiplication
+accelerates from O of n squared to O of n log n, a factor n over
+log n saving; the security reduction moves from arbitrary lattice
+SVP to ideal lattice SVP — slightly weaker, and still an open
+research question. Ring-LWE trades "structure" for "efficiency" —
+one of the most profound design tradeoffs in modern cryptography.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 32  ·  Section 4 小結                                      ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+Section 4 小結。LWE 是「帶雜訊的線性方程組求解」；Regev 量子歸約把
+worst-case lattice SVP 轉化為 average-case LWE 的安全保證；缺點是公
+鑰 O(n^2)。Ring-LWE 把 Z^n 換為分圓整數環，歸約對應到理想格上的
+approx-SVP，公鑰縮為 O(n)、乘法 O(n log n) — 透過 NTT。代數結構的具
+體貢獻：質理想分裂（Obj. 3）轉化為 CRT 同構，再化為 NTT；codifferent
+（Obj. 4）對應 dual ring R^∨，power-of-two 時退化為純量。代數數論
+直接決定了 Ring-LWE 的形態與效率。
+
+[English]
+Summary of Section 4. LWE is "noisy linear system solving"; Regev's
+quantum reduction turns worst-case lattice SVP into an average-case
+security guarantee for LWE; the drawback is an O of n squared
+public key. Ring-LWE replaces Zⁿ with the cyclotomic ring of
+integers, with the reduction now corresponding to approximate SVP
+on ideal lattices; the public key shrinks to O of n, and
+multiplication accelerates to O of n log n via NTT. Concrete
+contributions of algebraic structure: prime ideal splitting,
+Objective three, becomes a CRT isomorphism, then NTT; the
+codifferent, Objective four, corresponds to the dual ring R-vee,
+which collapses to a scalar in the power-of-two case. Algebraic
+number theory directly shapes both the form and efficiency of
+Ring-LWE.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 33  ·  Section 5 標題頁                                    ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+最後第五節，應用，五分鐘。簡單帶過 Ring-LWE 已經被部署在哪裡，以及
+為什麼它對你我的日常生活都很重要。
+
+[English]
+Finally, Section 5: applications, five minutes. A brief overview of
+where Ring-LWE has already been deployed, and why it matters for
+everyday life.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 34  ·  為什麼這件事重要                                    ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+今天日常生活中所有的加密連線 — HTTPS 網站、行動銀行、即時通訊、軟
+體更新、VPN — 全部依賴 RSA 或 ECC。一旦量子電腦上線，這些將同時
+失效。再加上 harvest-now-decrypt-later 威脅，今日攔截的密文可被未
+來量子電腦解密 — 醫療紀錄、外交電文、長期密鑰已暴露。NIST 建議
+2030 年前完成關鍵系統的後量子密碼轉換；Google、Cloudflare、Apple
+等公司已開始於 TLS 部署 ML-KEM 的混合模式，這個變革正在發生。
+
+[English]
+Today, every encrypted connection in daily life — HTTPS websites,
+mobile banking, instant messaging, software updates, VPNs — relies
+on RSA or ECC. The moment a sufficiently capable quantum computer
+exists, all of these collapse simultaneously. Combined with the
+harvest-now-decrypt-later threat, ciphertexts intercepted today
+can be decrypted by future quantum computers — medical records,
+diplomatic cables, long-term keys are already exposed. NIST
+recommends completing post-quantum migration for critical systems
+before 2030; Google, Cloudflare, and Apple have already begun
+deploying hybrid ML-KEM in TLS. This transition is happening now.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 35  ·  NIST FIPS 203 / 204 (2024)                          ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+2024 年 8 月，經過八年的全球競賽（2016–2024），NIST 公布首批後量子
+密碼標準。FIPS 203 是金鑰交換 — 後量子版本的 RSA / Diffie-Hellman 握
+手 — 用於兩方建立加密通道前的「秘密握手」；數學基礎是 Ring-LWE 與其
+模版本 Module-LWE；公鑰約 800 byte，密文約 1 KB，速度甚至快過 RSA。
+FIPS 204 是數位簽章 — 後量子版本的 RSA / ECDSA — 用於 TLS 憑證、軟
+體簽章、身分認證；同樣以 Ring-LWE 為數學基礎；簽章約 2.4 KB，公鑰約
+1.3 KB。簡單一句話：代數數論加上格幾何，等於你我未來十年的網路安全
+基礎。
+
+[English]
+In August 2024, after an eight-year global competition from 2016
+to 2024, NIST released the first post-quantum standards. FIPS 203
+is for key encapsulation — the post-quantum replacement for the
+RSA and Diffie–Hellman handshake — used to establish a shared
+secret between two parties before opening an encrypted channel;
+its mathematical basis is Ring-LWE and its module variant, Module-
+LWE; public keys are about 800 bytes, ciphertexts about one
+kilobyte, and it actually runs faster than RSA. FIPS 204 is for
+digital signatures — the post-quantum replacement for RSA and
+ECDSA — used in TLS certificates, software signing, and identity
+authentication; signatures are about 2.4 kilobytes, public keys
+about 1.3 kilobytes. To put it in one sentence: algebraic number
+theory plus lattice geometry equals the security foundation of the
+internet for the next decade.
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Slide 36  ·  Thank you / Q & A                                   ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[中文]
+報告結束。整份報告的核心想表達一件事：本來看似抽象的代數數論 — 分
+圓域、Dedekind domain、理想分解、判別式、Minkowski 嵌入 — 在 Ring-
+LWE 與後量子密碼學的脈絡裡，每一個概念都對應到具體的演算法或安全保
+證。格、理想格、Ring-LWE、後量子密碼學 — 這條路徑將代數結構翻譯為
+網路上每一個加密握手的基礎。感謝老師、感謝各位同學的耐心聆聽。歡迎
+提問。
+
+[English]
+This concludes the talk. The central message: algebraic number
+theory, which seems abstract on its own — cyclotomic fields,
+Dedekind domains, ideal factorisation, discriminants, the
+Minkowski embedding — finds in Ring-LWE and post-quantum
+cryptography a context where every concept corresponds to a
+concrete algorithm or security guarantee. Lattices, ideal
+lattices, Ring-LWE, post-quantum cryptography — this is the
+pathway translating algebraic structure into the foundation of
+every encrypted handshake on the internet. Thank you, professor,
+and thank you, classmates, for your patience. I welcome your
+questions.
+
+
+════════════════════════════════════════════════════════════════════
+   時間檢查表 / Time Checkpoints
+   ─ Slide 1 (Title)        00:00 - 00:30
+   ─ Slide 2 (S1 標題)      00:30 - 00:45
+   ─ Slide 3 (RSA)          00:45 - 02:15
+   ─ Slide 4 (ECC)          02:15 - 03:45
+   ─ Slide 5 (Shor)         03:45 - 05:30
+   ─ Slide 6 (Harvest)      05:30 - 07:00
+   ─ Slide 7 (Lattice 解方) 07:00 - 08:30
+   ─ Slide 8 (S1 小結)      08:30 - 10:00
+   ─ Slide 9 (S2 標題)      10:00 - 10:15
+   ─ Slide 10 (Lattice 定義) 10:15 - 11:45
+   ─ Slide 11 (Hard Probs)  11:45 - 13:15
+   ─ Slide 12 (Minkowski)   13:15 - 14:45
+   ─ Slide 13 (Step 1)      14:45 - 16:15
+   ─ Slide 14 (Step 2)      16:15 - 18:30
+   ─ Slide 15 (S2 小結)     18:30 - 20:00
+   ─ Slide 16 (S3 標題)     20:00 - 20:15
+   ─ Slide 17 (general 分圓) 20:15 - 21:30
+   ─ Slide 18 (Φ_n 範例)    21:30 - 22:30
+   ─ Slide 19 (K, O_K)      22:30 - 24:00
+   ─ Slide 20 (m=2^k)       24:00 - 25:00
+   ─ Slide 21 (質理想分裂)  25:00 - 26:30
+   ─ Slide 22 (Tr/N/Δ)      26:30 - 27:45
+   ─ Slide 23 (canonical)   27:45 - 29:00
+   ─ Slide 24 (m=8 例)      29:00 - 30:00
+   ─ Slide 25 (S4 標題)     30:00 - 30:15
+   ─ Slide 26 (LWE 直觀)    30:15 - 31:30
+   ─ Slide 27 (LWE 定義)    31:30 - 32:45
+   ─ Slide 28 (Regev 歸約)  32:45 - 34:15
+   ─ Slide 29 (Ring-LWE)    34:15 - 36:00
+   ─ Slide 30 (NTT)         36:00 - 37:30
+   ─ Slide 31 (Negacyclic)  37:30 - 39:00
+   ─ Slide 32 (S4 小結)     39:00 - 40:00
+   ─ Slide 33 (S5 標題)     40:00 - 40:15
+   ─ Slide 34 (Why matters) 40:15 - 42:00
+   ─ Slide 35 (FIPS 203/4)  42:00 - 44:00
+   ─ Slide 36 (Thank you)   44:00 - 45:00
+
+   ─ 預期 Q&A 預留 5–10 分鐘（在 50 分鐘上限內）
+════════════════════════════════════════════════════════════════════

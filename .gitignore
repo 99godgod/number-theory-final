@@ -1,0 +1,35 @@
+# LaTeX 中間檔
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.bbl
+*.blg
+*.idx
+*.ind
+*.lof
+*.lot
+*.nav
+*.snm
+*.vrb
+
+# 備份檔
+*.bak
+*~
+
+# Office 暫存
+~$*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
