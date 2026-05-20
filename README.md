@@ -54,15 +54,15 @@ $$\Lambda(B) = \bigoplus_{i=1}^{n} \mathbb{Z}\, b_i = \left\lbrace\sum_{i=1}^n m
 
 為離散加法子群。基本不變量包括**覆積** $\det(\Lambda) = |\det B|$（基本胞體積）與**相繼極小** $\lambda_i(\Lambda)$，其中 $\lambda_1(\Lambda)$ 為最短非零向量長度。
 
-**SVP — Shortest Vector Problem**：求 $x \in \Lambda(B) \setminus \{0\}$ 使 $\|x\| = \lambda_1(\Lambda)$ 最小。直觀為「在離散點集中找離原點最近的非零點」；基底歪扭時即使最短向量很短，亦難從基底辨識，需先做 lattice basis reduction（如 LLL）。
+**SVP — Shortest Vector Problem**：求 $x \in \Lambda(B) \setminus \lbrace 0\rbrace$ 使 $\lVert x\rVert = \lambda_1(\Lambda)$ 最小。直觀為「在離散點集中找離原點最近的非零點」；基底歪扭時即使最短向量很短，亦難從基底辨識，需先做 lattice basis reduction（如 LLL）。
 
-**CVP — Closest Vector Problem**：給目標 $y \in \mathbb{R}^n$，求 $x \in \Lambda(B)$ 使 $\|x-y\|$ 最小。CVP 至少和 SVP 一樣難（SVP 可規約至 CVP）；目前最佳古典與量子演算法在小 $\gamma$ 下需 $2^{\Theta(n)}$ 時間。
+**CVP — Closest Vector Problem**：給目標 $y \in \mathbb{R}^n$，求 $x \in \Lambda(B)$ 使 $\lVert x-y\rVert$ 最小。CVP 至少和 SVP 一樣難（SVP 可規約至 CVP）；目前最佳古典與量子演算法在小 $\gamma$ 下需 $2^{\Theta(n)}$ 時間。
 
 **Minkowski 第一定理（1889）**：
 
-> 若 $S \subset \mathbb{R}^n$ 為中心對稱凸體（$x \in S \Rightarrow -x \in S$，任兩點線段含於 $S$）且 $\text{vol}(S) > 2^n \det(\Lambda)$，則 $S$ 必含一非零格點 $v \in \Lambda \cap S \setminus \{0\}$。
+> 若 $S \subset \mathbb{R}^n$ 為中心對稱凸體（$x \in S \Rightarrow -x \in S$，任兩點線段含於 $S$）且 $\text{vol}(S) > 2^n \det(\Lambda)$，則 $S$ 必含一非零格點 $v \in \Lambda \cap S \setminus \lbrace 0\rbrace$。
 
-**SVP 上界推導**：取中心對稱立方體 $C_r = [-r,r]^n$，$\text{vol}(C_r) = (2r)^n$。當 $r > \det(\Lambda)^{1/n}$ 時由 Minkowski 知 $C_r$ 含非零格點 $v$，故 $\|v\|_\infty \leq r$。配合 $\|v\|_2 \leq \sqrt{n}\,\|v\|_\infty$ 並令 $r \searrow \det(\Lambda)^{1/n}$ 得：
+**SVP 上界推導**：取中心對稱立方體 $C_r = [-r,r]^n$，$\text{vol}(C_r) = (2r)^n$。當 $r > \det(\Lambda)^{1/n}$ 時由 Minkowski 知 $C_r$ 含非零格點 $v$，故 $\lVert v\rVert_\infty \leq r$。配合 $\lVert v\rVert_2 \leq \sqrt{n}\,\lVert v\rVert_\infty$ 並令 $r \searrow \det(\Lambda)^{1/n}$ 得：
 
 $$\boxed{\lambda_1(\Lambda) \leq \sqrt{n} \cdot \det(\Lambda)^{1/n}} \quad \text{（連結格幾何與課程框架——Obj. 5）}$$
 
@@ -78,7 +78,7 @@ $$\Phi_n(x) = \prod_{\substack{1\leq k\leq n\\\gcd(k,n)=1}} (x - \zeta_n^k) \in 
 
 **Power-of-two 子類**：$m = 2^k$ 時 $\Phi_m(x) = x^{2^{k-1}}+1$，$n = \varphi(m) = 2^{k-1}$；$m=8 \Rightarrow \Phi_8 = x^4+1$、$m=1024 \Rightarrow \Phi_{1024} = x^{512}+1$（Ring-LWE 實作首選）。
 
-**Trace, Norm, Discriminant**：$\text{Tr}_{K/\mathbb{Q}}(\alpha) = \sum_i \sigma_i(\alpha)$、$N_{K/\mathbb{Q}}(\alpha) = \prod_i \sigma_i(\alpha)$；codifferent $\mathfrak{d}_{K/\mathbb{Q}}^{-1} = \{\alpha \in K : \text{Tr}(\alpha\mathcal{O}_K) \subseteq \mathbb{Z}\}$；判別式 $\Delta_K = N(\mathfrak{d}_{K/\mathbb{Q}})$。對 $m=2^k$：$|\Delta_K| = 2^{n(k-1)}$。
+**Trace, Norm, Discriminant**：$\text{Tr}_{K/\mathbb{Q}}(\alpha) = \sum_i \sigma_i(\alpha)$、$N_{K/\mathbb{Q}}(\alpha) = \prod_i \sigma_i(\alpha)$；codifferent $\mathfrak{d}_{K/\mathbb{Q}}^{-1} = \lbrace\alpha \in K : \text{Tr}(\alpha\mathcal{O}_K) \subseteq \mathbb{Z}\rbrace$；判別式 $\Delta_K = N(\mathfrak{d}_{K/\mathbb{Q}})$。對 $m=2^k$：$|\Delta_K| = 2^{n(k-1)}$。
 
 **Canonical (Minkowski) Embedding**：分圓域 $r_1=0,\ r_2=n/2$：
 
