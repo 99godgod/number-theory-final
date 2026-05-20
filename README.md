@@ -50,7 +50,7 @@ python make_ppt_v2.py
 
 **格的定義**：設 $b_1,\ldots,b_n \in \mathbb{R}^n$ 線性獨立，則
 
-$$\Lambda(B) = \bigoplus_{i=1}^{n} \mathbb{Z}\, b_i = \left\{\sum_{i=1}^n m_i b_i : m_i \in \mathbb{Z}\right\} \subset \mathbb{R}^n$$
+$$\Lambda(B) = \bigoplus_{i=1}^{n} \mathbb{Z}\, b_i = \left\lbrace\sum_{i=1}^n m_i b_i : m_i \in \mathbb{Z}\right\rbrace \subset \mathbb{R}^n$$
 
 為離散加法子群。基本不變量包括**覆積** $\det(\Lambda) = |\det B|$（基本胞體積）與**相繼極小** $\lambda_i(\Lambda)$，其中 $\lambda_1(\Lambda)$ 為最短非零向量長度。
 
