@@ -1,0 +1,236 @@
+%!TEX program = xelatex
+\documentclass[12pt, a4paper]{article}
+
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{tcolorbox}
+
+\geometry{top=2cm, bottom=2cm, left=2.5cm, right=2.5cm}
+\setlength{\headheight}{14pt}
+
+\setCJKmainfont{Microsoft JhengHei}
+\setmainfont{Times New Roman}
+
+\definecolor{accent}{RGB}{30, 80, 160}
+\definecolor{notebg}{RGB}{255, 252, 220}
+\definecolor{noteborder}{RGB}{180, 140, 0}
+
+\tcbuselibrary{breakable}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[R]{\small\color{gray} 黃崇晉 | L16141149 | 0520}
+\fancyfoot[C]{\small\thepage}
+
+\titleformat{\section}[block]
+  {\large\bfseries\color{accent}}
+  {}
+  {0pt}
+  {}
+  [\vspace{2pt}\titlerule\vspace{4pt}]
+
+\setstretch{1.45}
+\setlength{\parskip}{5pt}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+% 標題區
+\begin{center}
+  {\LARGE\bfseries\color{accent}
+    Ring-LWE and Ideal Lattice Cryptography}\\[4pt]
+  {\large\bfseries Ring-LWE 與理想格密碼學}\\[2pt]
+  {\normalsize Algebraic Number Theory Meets Post-Quantum Security
+    \quad|\quad 代數數論與後量子安全的交匯}\\[2pt]
+  {\normalsize\itshape\color{accent} 副題：SVP/CVP 的困難性與求解方法}\\[8pt]
+  \rule{\linewidth}{0.8pt}\\[4pt]
+  {\small 黃崇晉（Chung-Chin Huang）\quad 學號：L16141149
+    \quad 數論（一）\quad 2026 春季，國立成功大學}
+\end{center}
+
+\vspace{4pt}
+
+%% ─────────────────────────────────────────────
+\section{研究動機 \small\normalfont\color{gray}(Motivation)}
+
+\textbf{Classical public-key cryptography is provably broken by quantum computation.}
+RSA（安全性基於整數分解）與 ECC（安全性基於橢圓曲線離散對數）是當代公鑰基礎設施的兩大支柱。
+\textbf{Shor 演算法}（P.\ Shor, FOCS 1994）對兩者皆能以量子多項式時間
+$\widetilde{O}((\log N)^3)$ 求解，其核心為\textbf{Period Finding}——利用量子傅立葉轉換
+在指數時間內找出函數的週期，而分解 $N$ 等同於求乘法群中元素的階（即週期）。相較之下，
+古典最佳演算法 GNFS 需亞指數時間 $\exp(\widetilde{O}((\log N)^{1/3}))$。
+
+\textbf{格密碼學}（Lattice-based cryptography）是目前最受矚目的後量子替代方案：
+安全性可在最壞情形下歸約至格上的幾何困難問題——\textit{最短向量問題（SVP）}
+與\textit{最近向量問題（CVP）}——迄今無已知量子多項式時間演算法。
+本報告聚焦於 SVP/CVP 的\textbf{困難性根源}與\textbf{實用求解演算法}，
+並說明其如何支撐 NIST 後量子標準（FIPS 203/204）之安全性。
+
+%% ─────────────────────────────────────────────
+\section{Step 1 \;—\; 格與困難問題 \small\normalfont\color{gray}(Lattices and Hard Problems)}
+
+\textbf{格的基本定義。}
+秩為 $n$ 的格（lattice）是 $\mathbb{R}^n$ 中由線性獨立向量
+$b_1,\ldots,b_n$ 生成的離散子群：
+\[
+  \Lambda(B) \;=\; \Bigl\{\,\textstyle\sum_{i=1}^n z_i\,b_i \;\Big|\; z_i\in\mathbb{Z}\,\Bigr\},
+  \qquad B = [b_1\,|\,\cdots\,|\,b_n]\in\mathbb{R}^{n\times n}.
+\]
+\textbf{覆積}（covolume）$\det(\Lambda):=|\det B|$ 是 $\Lambda$ 的不變量。
+\textbf{相繼極小}（successive minima）定義為
+\[
+  \lambda_i(\Lambda) := \inf\bigl\{r>0 :
+    \dim\mathrm{span}(\Lambda\cap\overline{B(0,r)})\geq i\bigr\},\quad i=1,\ldots,n.
+\]
+
+\textbf{核心困難問題。}
+\begin{itemize}\setlength{\itemsep}{2pt}
+  \item $\mathrm{SVP}_\gamma$：找 $v\in\Lambda\setminus\{0\}$ 使 $\|v\|\leq\gamma\,\lambda_1(\Lambda)$。
+  \item $\mathrm{CVP}$：給定目標點 $y\in\mathbb{R}^n$，計算
+    $\mathrm{dist}(y,\Lambda):=\min_{x\in\Lambda}\|x-y\|$，並找到最近格點。
+  \item $\mathrm{BDD}$（Bounded Distance Decoding）：CVP 的特例，
+    已知 $\mathrm{dist}(y,\Lambda)<\lambda_1/2$，此時最近格點唯一。
+    \textbf{BDD 是 LWE 安全性的幾何來源}：LWE 的樣本誤差 $e$ 使目標點
+    落在距離格 $\Lambda$ 不到 $\lambda_1/2$ 的位置。
+\end{itemize}
+
+\begin{tcolorbox}[
+  colback=notebg, colframe=noteborder,
+  title={\bfseries Minkowski 第一定理（完整陳述）},
+  fonttitle=\small, breakable
+]
+設 $\Lambda\subset\mathbb{R}^n$ 為秩 $n$ 的格，$S\subset\mathbb{R}^n$ 為中心對稱的凸體。
+若 $\mathrm{vol}(S)>2^n\det(\Lambda)$，則 $S$ 包含至少一個非零格點 $v\in\Lambda\setminus\{0\}$。
+\end{tcolorbox}
+
+\textbf{SVP 上界推導。} 取中心對稱立方體 $C_r:=[-r,r]^n$，體積 $(2r)^n$。
+當 $r>\det(\Lambda)^{1/n}$ 時，$(2r)^n>2^n\det(\Lambda)$，由 Minkowski 定理知
+$C_r$ 含非零格點 $v$，故 $\|v\|_\infty\leq r$；再由 $\|v\|_2\leq\sqrt{n}\,\|v\|_\infty$，
+令 $r\searrow\det(\Lambda)^{1/n}$ 得
+\[
+  \lambda_1(\Lambda)\;\leq\;\sqrt{n}\cdot\det(\Lambda)^{1/n}.
+\]
+利用 Hermite 常數可進一步精化為 $\lambda_1(\Lambda)\leq\sqrt{\gamma_n}\,\det(\Lambda)^{1/n}$，
+其中 $\gamma_n\leq\tfrac{2n}{\pi e}+o(n)$。
+
+%% ─────────────────────────────────────────────
+\section{Step 2 \;—\; SVP 求解：基底縮短 \small\normalfont\color{gray}(Basis Reduction)}
+
+\textbf{Gram-Schmidt 正交化。}
+給定基底 $b_1,\ldots,b_n$，遞迴定義正交投影：
+\[
+  b_i^* \;=\; b_i \;-\; \sum_{j<i}\mu_{ij}\,b_j^*,
+  \qquad \mu_{ij} = \frac{\langle b_i, b_j^*\rangle}{\|b_j^*\|^2}.
+\]
+$b_i^*$ 本身通常\textbf{不是}格點，但 $\|b_i^*\|$ 衡量第 $i$ 個基底向量正交部分的長度，
+是分析基底品質的核心工具。
+
+\textbf{LLL 演算法}（Lenstra--Lenstra--Lovász, 1982）。LLL 對基底施加兩個條件：
+\begin{itemize}\setlength{\itemsep}{1pt}
+  \item \textit{Size condition}：$|\mu_{ij}|\leq\tfrac{1}{2}$，$\forall\, j<i$。
+  \item \textit{Lovász condition}：$\|b_i^*\|^2\geq
+    \bigl(\delta-\mu_{i,i-1}^2\bigr)\|b_{i-1}^*\|^2$，其中 $\delta\in(\tfrac{1}{4},1)$，常取 $\tfrac{3}{4}$。
+\end{itemize}
+
+\begin{tcolorbox}[
+  colback=notebg, colframe=noteborder,
+  title={\bfseries LLL 輸出保證},
+  fonttitle=\small
+]
+LLL 在多項式時間 $\mathrm{poly}(n,\log\|B\|)$ 內輸出 LLL-reduced 基底，滿足
+\[
+  \|b_1\| \;\leq\; 2^{(n-1)/2}\,\lambda_1(\Lambda).
+\]
+近似因子 $2^{(n-1)/2}$ 隨維度指數增長，但時間代價僅為多項式。
+\end{tcolorbox}
+
+\textbf{BKZ-$\beta$（Block Korkine-Zolotarev）。} 以區塊大小 $\beta$ 對基底
+連續套用精確 SVP 求解器（oracle）。近似因子降至 $\beta^{n/(2\beta)}$，
+是\textbf{實務格攻擊的主力工具}（如 Kyber 安全性估算所用）。
+
+\textbf{精確 SVP：Sieving。}
+Ajtai--Kumar--Sivakumar（AKS）sieving 演算法精確求解 SVP，
+時間複雜度 $2^{O(n)}$；最佳量子 sieving（Laarhoven 2016）可降至 $2^{0.265n}$。
+在格密碼安全性分析中，sieving 決定了攻擊成本的漸近下界。
+
+%% ─────────────────────────────────────────────
+\section{Step 3 \;—\; CVP 求解：Babai 演算法 \small\normalfont\color{gray}(Babai's Algorithms)}
+
+\textbf{Babai Rounding（Round-off 演算法，1986）。}
+給定目標點 $y\in\mathbb{R}^n$ 與基底矩陣 $B$，計算係數向量後四捨五入：
+\[
+  \hat{z} = \bigl\lfloor B^{-1}y\bigr\rceil \in\mathbb{Z}^n,
+  \qquad \text{輸出} \; B\hat{z}\in\Lambda.
+\]
+此法執行快速（$O(n^2)$），但對品質差的基底近似誤差大，無法保證找到真正最近格點。
+
+\textbf{Babai Nearest Plane（最近超平面演算法）。}
+採用 Gram-Schmidt 基底，從最高維度 $n$ 逐維遞推投影：在每一步取最近的超平面，
+再將問題降維至 $n-1$ 維子格繼續解算。
+
+\begin{tcolorbox}[
+  colback=notebg, colframe=noteborder,
+  title={\bfseries Nearest Plane 正確性條件},
+  fonttitle=\small
+]
+若基底為 LLL-reduced，且 $\mathrm{dist}(y,\Lambda)<\tfrac{1}{2}\,\|b_n^*\|$（其中
+$b_n^*$ 為最短 Gram-Schmidt 向量），則 Nearest Plane 在多項式時間內精確解 CVP。
+在「good basis」條件下，此即 BDD 的高效解法。
+\end{tcolorbox}
+
+\textbf{BDD $\to$ LWE 的幾何連結。}
+LWE 的樣本形如 $b = As + e \pmod{q}$，其中 $A\in\mathbb{Z}_q^{m\times n}$ 為公開矩陣、
+$s\in\mathbb{Z}_q^n$ 為秘密、$e$ 為小誤差向量。
+將 $b$ 視為目標點，格 $\Lambda=q\mathbb{Z}^m + A\mathbb{Z}^n$ 的最近格點即為 $As$，
+誤差 $e$ 使得 $\mathrm{dist}(b,\Lambda)=\|e\|<\lambda_1/2$——這恰是 BDD 的假設。
+因此，\textbf{解 LWE 等同於解 BDD instance}，此連結是整個格密碼安全性歸約的幾何核心。
+
+%% ─────────────────────────────────────────────
+\section{Step 4 \;—\; 應用與開放問題 \small\normalfont\color{gray}(Applications and Open Problems)}
+
+\textbf{NIST 後量子標準。}
+2024 年 8 月，NIST 正式公布首批後量子密碼標準：
+\begin{itemize}\setlength{\itemsep}{1pt}
+  \item \textbf{FIPS 203（ML-KEM）}：以 Module-LWE 為基礎的金鑰封裝機制，
+    源自 Kyber。數學基礎為 Ring-LWE 在模組格上的推廣。
+  \item \textbf{FIPS 204（ML-DSA）}：以 Module-LWE/SIS 為基礎的數位簽章演算法，
+    源自 Dilithium。
+\end{itemize}
+
+\textbf{安全參數估算（Kyber-512）。}
+Kyber-512 使用參數 $n=256$，$q=3329$，誤差分布 $\eta=3$（二項分布近似 Gaussian）。
+針對格攻擊（BKZ-$\beta$ + sieving）的攻擊成本估算約為 $2^{118}$ 次操作，
+達到 NIST Security Level I（等同 AES-128）。此估算依賴對 BKZ 區塊大小 $\beta$ 與
+sieving 成本之精確模型。
+
+\textbf{開放問題。}
+\begin{itemize}\setlength{\itemsep}{1pt}
+  \item \textbf{Ideal-SVP vs.\ SVP}：理想格（ideal lattice）上的 SVP 是否比任意格更易？
+    目前最佳結果（Cramer et al.\ 2016, Ducas--Nguyen 2012）顯示量子演算法可對特定理想格
+    加速，但一般情形仍未有突破。
+  \item \textbf{量子困難性下界}：格問題（SVP/CVP）的量子複雜度下界是否可達
+    $2^{\Omega(n)}$？目前尚無無條件下界。
+  \item \textbf{Hardness in the ring setting}：Ring-LWE 之最壞情形歸約目前依賴
+    特定分圓域的結構；對任意數環是否仍成立為開放問題。
+\end{itemize}
+
+\vspace{10pt}
+\noindent\rule{\linewidth}{0.4pt}
+\begin{center}
+  \small\color{gray}
+  主要參考文獻：O.\ Regev, \textit{J.\ ACM} \textbf{56}(6), 2009.\quad
+  Lyubashevsky--Peikert--Regev, \textit{J.\ ACM} \textbf{60}(6), 2013.\quad
+  L.\ Babai, \textit{Combinatorica} \textbf{6}(1), 1986.\quad
+  C.\ Peikert, \textit{Found.\ Trends TCS} \textbf{10}(4), 2016.\quad
+  NIST FIPS 203/204, 2024.
+\end{center}
+
+\end{document}
