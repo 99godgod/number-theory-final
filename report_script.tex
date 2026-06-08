@@ -1,0 +1,313 @@
+%!TEX program = xelatex
+\documentclass[10.5pt, a4paper]{article}
+
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{tcolorbox}
+
+\geometry{top=1.6cm, bottom=1.6cm, left=2.0cm, right=2.0cm}
+\setlength{\headheight}{14pt}
+
+\setCJKmainfont{Microsoft JhengHei}
+\setmainfont{Times New Roman}
+
+\definecolor{accent}{RGB}{30, 80, 160}
+\definecolor{thmfill}{RGB}{237, 246, 255}
+\definecolor{warnfill}{RGB}{255, 243, 235}
+\definecolor{timefill}{RGB}{232, 232, 232}
+
+\tcbuselibrary{breakable}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[R]{\small\color{gray} 黃崇晉 | L16141149 | 數論（一）2026}
+\fancyfoot[C]{\small\thepage}
+
+\titleformat{\section}[block]
+  {\normalsize\bfseries\color{accent}}{}
+  {0pt}{}
+  [\vspace{1pt}\titlerule\vspace{3pt}]
+
+\titleformat{\subsection}[block]
+  {\small\bfseries\color{accent!80!black}}{}
+  {0pt}{}
+
+\setstretch{1.2}
+\setlength{\parskip}{2.3pt}
+\setlength{\parindent}{0pt}
+
+\setlength{\topsep}{2pt}
+\setlength{\partopsep}{0pt}
+\makeatletter
+\let\orig@itemize\itemize
+\renewcommand{\itemize}{%
+  \orig@itemize\setlength{\itemsep}{1pt}\setlength{\parsep}{0pt}%
+}
+\makeatother
+
+\newtheoremstyle{cpt}{2pt}{2pt}{\normalfont}{0pt}{\bfseries\color{accent}}{.}{0.45em}{}
+\theoremstyle{cpt}
+\newtheorem{definition}{定義}
+\newtheorem{lemma}{引理}
+\newtheorem{theorem}{定理}
+\newtheorem{corollary}{推論}
+\newtheorem{proposition}{命題}
+
+\newenvironment{proofbox}[1][證明]{%
+  \begin{tcolorbox}[colback=thmfill, colframe=accent!40,
+    breakable, left=5pt, right=5pt, top=3pt, bottom=3pt, boxrule=0.4pt]
+  \noindent\textbf{\color{accent}#1.}\quad\small
+}{%
+  \hfill$\square$\end{tcolorbox}\vspace{-1pt}
+}
+
+\newcommand{\timetag}[1]{\hfill\colorbox{timefill}{\small\color{gray}\textbf{#1}}}
+
+\begin{document}
+
+% ── Title ─────────────────────────────────────────────────────────────
+\begin{center}
+  {\LARGE\bfseries\color{accent}
+    Ring-LWE and Ideal Lattice Cryptography}\\[2pt]
+  {\large\bfseries 口頭報告內容大綱（約 40 分鐘）}\\[1pt]
+  {\small\itshape\color{accent}
+    格與 Minkowski 定理（簡述，約 10 分鐘）\;+\; Ring-LWE 的數論結構與其數學運算（重點，約 30 分鐘）}\\[5pt]
+  \rule{\linewidth}{0.8pt}\\[2pt]
+  {\small 黃崇晉（Chung-Chin Huang）\;|\; L16141149
+    \;|\; 數論（一）\;|\; 2026 春季，國立成功大學}
+\end{center}
+
+\vspace{1pt}
+
+%% ══════════════════════════════════════════════════════════════════════
+\section{Part 1 — 格與 Minkowski 定理
+  \textnormal{\small\color{gray}(Geometry of Numbers)}
+  \timetag{簡述 \textasciitilde 10 分鐘}}
+
+本部分僅作\textbf{鋪墊}：快速建立「格」與「體積—格點存在性」的直覺，
+為 Part 2 中「理想 $\mapsto$ 理想格」的轉換鋪路，不深入完整證明。
+
+\begin{definition}[格（Lattice）]
+  取 $\mathbb{R}^n$ 中 $n$ 個線性獨立向量 $b_1,\ldots,b_n$，其整數線性組合
+  $\mathcal{L}=\sum_{i=1}^n\mathbb{Z}\,b_i\subset\mathbb{R}^n$
+  稱為秩 $n$ 的\textbf{格}。基底矩陣 $B=[b_1|\cdots|b_n]$ 的
+  $\det(\mathcal{L}):=|\det B|$（\textbf{覆積}，covolume）與基底選擇無關，
+  幾何上等於基本域 $\mathcal{F}=B[0,1)^n$ 的體積。
+\end{definition}
+
+\begin{theorem}[Minkowski 第一定理，1896]
+  設 $\mathcal{L}\subset\mathbb{R}^n$ 為格，$S\subset\mathbb{R}^n$ 為中心對稱凸體
+  （$x\in S\Rightarrow -x\in S$，且 $S$ 有界閉凸）。
+  若 $\mathrm{vol}(S) > 2^n\det(\mathcal{L})$，則 $S$ 含至少一個非零格點 $v\in\mathcal{L}\setminus\{0\}$。
+\end{theorem}
+
+\textit{證明構想（口述帶過，不展開）：} 對 $\tfrac12 S$ 套用 Blichfeldt
+鴿巢論證——$\mathrm{vol}(\tfrac12 S) = \mathrm{vol}(S)/2^n > \det(\mathcal{L})$
+迫使兩個平移後的拷貝重疊，取交集中一點 $z$ 反推出 $p,q\in\tfrac12 S$ 使
+$p-q\in\mathcal{L}$；再用中心對稱性與凸性將 $p-q$ 拉回 $S$ 內，
+即得 $S\cap(\mathcal{L}\setminus\{0\})\neq\varnothing$。
+
+\textbf{承上啟下（橋接 Part 2）。} 此定理的核心訊息是
+\emph{「體積足夠大 $\Longrightarrow$ 非零格點必然存在」}——一個\textbf{非構造性}的存在性陳述，
+正是 SVP（最短向量問題）困難性的幾何根源。更重要的是：
+透過\textbf{標準嵌入} $\sigma: K \hookrightarrow \mathbb{R}^n$，數體 $K$ 中的每個理想
+$\mathfrak{a}\subset\mathcal{O}_K$ 都對應到一個格 $\sigma(\mathfrak{a})$（理想格），
+且其覆積滿足
+\[
+  \det\bigl(\sigma(\mathfrak{a})\bigr) \;=\; N(\mathfrak{a})\cdot\sqrt{|\Delta_K|},
+\]
+將「理想範數」（算術量）與「格體積」（幾何量）精確地連結在一起。
+\textbf{這正是 Ring-LWE 得以把「格上困難問題」搬進「分圓環的代數結構」中討論的出發點}——
+也是接下來 30 分鐘要深入的主題。
+
+%% ══════════════════════════════════════════════════════════════════════
+\section{Part 2 — Ring-LWE 的數論結構：數學運算
+  \textnormal{\small\color{gray}(Number-Theoretic Structure of Ring-LWE)}
+  \timetag{重點 \textasciitilde 30 分鐘}}
+
+本部分為報告\textbf{核心}，依序展開：環的代數設定 $\to$ 質理想分解
+$\to$ 商環的 CRT 結構 $\to$ NTT 快速運算 $\to$ 差異理想（對偶格）
+$\to$ Ring-LWE 樣本與安全歸約鏈——每一步都對應一個具體的\textbf{數學運算}。
+
+\subsection{2.1 \;分圓環的代數設定：從理想到理想格 \hfill {\footnotesize\color{gray}(\textasciitilde 5 分鐘)}}
+
+令 $n=2^k$，$\zeta=\zeta_{2n}=e^{i\pi/n}$，分圓多項式
+$\Phi_{2n}(x)=x^n+1$（$n=2^k$ 時於 $\mathbb{Q}$ 上不可約），
+$K=\mathbb{Q}(\zeta)$，$[K:\mathbb{Q}]=n$，環的設定為
+\[
+  R \;:=\; \mathcal{O}_K \;=\; \mathbb{Z}[\zeta] \;\cong\; \mathbb{Z}[x]/\bigl(\Phi_{2n}(x)\bigr),
+  \qquad
+  R_q \;:=\; R/qR \;\cong\; \mathbb{Z}_q[x]/\bigl(\Phi_{2n}(x)\bigr).
+\]
+標準嵌入 $\sigma_j(\zeta)=\zeta^{2j-1}$（$j=1,\ldots,n$）給出
+$\sigma:K\to\mathbb{C}^n$，其像落在 $H\cong\mathbb{R}^n$ 中且與環乘法相容
+（逐分量乘法）。利用判別式公式 $|\Delta_K| = (2n)^n/2^n = n^n$，可算出
+\[
+  \det\bigl(\sigma(\mathcal{O}_K)\bigr) = \sqrt{|\Delta_K|} = n^{n/2},
+  \qquad
+  \det\bigl(\sigma(\mathfrak{a})\bigr) = N(\mathfrak{a})\cdot n^{n/2}\quad(\forall\,\mathfrak{a}\subset\mathcal{O}_K).
+\]
+\textbf{運算重點}：理想的乘法（$\mathfrak{a}\mathfrak{b}$）對應到理想格的某種疊合，
+理想範數 $N(\mathfrak{a})=[\mathcal{O}_K:\mathfrak{a}]$ 直接控制格的縮放比例——
+這把 $R$ 中的代數運算（理想乘法、模運算）轉譯為 $\mathbb{R}^n$ 中可計算的幾何量。
+
+\subsection{2.2 \;質理想分解：$R_q$ 的結構分類運算 \hfill {\footnotesize\color{gray}(\textasciitilde 7 分鐘)}}
+
+對質數 $q\nmid 2n$，$q$ 在 $\mathcal{O}_K$ 中如何分解，完全由
+$\Phi_{2n}(x) \bmod q$ 的因式分解運算決定：
+\[
+  \Phi_{2n}(x) \;\equiv\; \prod_{i=1}^{g}\phi_i(x)^{e_i} \pmod q,
+  \qquad \deg\phi_i = f,\quad e\cdot f \cdot g = n,
+\]
+對應 $q\mathcal{O}_K = \mathfrak{q}_1^{e_1}\cdots\mathfrak{q}_g^{e_g}$，
+$N(\mathfrak{q}_i)=q^f$，其中 $f$ 即 $q$ 在乘法群 $(\mathbb{Z}/2n\mathbb{Z})^\times$ 中的階。
+
+\begin{proposition}[完全分裂條件]
+  $q$ 在 $\mathcal{O}_K$ 中\textbf{完全分裂}（$e=1,\,f=1,\,g=n$）
+  $\iff$ $q \equiv 1 \pmod{2n}$。此時 $\mathbb{F}_q^\times$ 含 $2n$ 次本原單位根
+  $\omega$，$\Phi_{2n}(x)\equiv\prod_{j=1}^{n}(x-\omega_j)\pmod q$。
+\end{proposition}
+
+\begin{proofbox}[由完全分裂到 $R_q\cong\mathbb{F}_q^n$（中國剩餘定理運算）]
+  $\Phi_{2n}(x)\bmod q$ 分解為 $n$ 個相異一次因式，故由 CRT：
+  \[
+    R_q = \mathbb{F}_q[x]/\bigl(\Phi_{2n}(x)\bigr)
+        \;\xrightarrow{\ \cong\ }\;
+        \prod_{j=1}^{n}\mathbb{F}_q[x]/(x-\omega_j)
+        \;\cong\; \mathbb{F}_q^n,
+    \qquad
+    a(x)\;\longmapsto\;\bigl(a(\omega_1),\ldots,a(\omega_n)\bigr).
+  \]
+  此映射把 $R_q$ 中「多項式環的乘法」轉成 $\mathbb{F}_q^n$ 中的「逐分量乘法」——
+  即下一節 NTT 運算的代數根源。
+\end{proofbox}
+
+\subsection{2.3 \;數論變換 NTT：環乘法的快速運算流程 \hfill {\footnotesize\color{gray}(\textasciitilde 8 分鐘)}}
+
+\begin{definition}[數論變換 NTT]
+  在完全分裂（$q\equiv 1\!\!\pmod{2n}$）之下，定義\textbf{求值映射}
+  \[
+    \widehat{a} \;=\; \mathrm{NTT}(a) \;:=\; \bigl(a(\omega_1),\ldots,a(\omega_n)\bigr)\in\mathbb{F}_q^n,
+    \qquad a(x)=\sum_{i=0}^{n-1}a_i x^i .
+  \]
+  則環乘法化為逐分量乘法：
+  \[
+    \mathrm{NTT}(a\cdot b) \;=\; \mathrm{NTT}(a)\odot\mathrm{NTT}(b)
+    \;=\; \bigl(a(\omega_j)\,b(\omega_j)\bigr)_{j=1}^{n},
+  \]
+  乘完後再以反變換 $\mathrm{NTT}^{-1}$（插值，含 $n^{-1} \bmod q$ 縮放）取回係數表示。
+\end{definition}
+
+\textbf{運算流程（Cooley–Tukey 蝴蝶演算法）}：把長度 $n$ 的求值問題依
+奇偶指標遞迴拆成兩個長度 $n/2$ 的子問題：
+\[
+  a(\omega_j) = a_{\mathrm{even}}(\omega_j^2) + \omega_j\, a_{\mathrm{odd}}(\omega_j^2),
+\]
+配合 $\omega^{n} = -1$（負循環性質）可重複利用子結果，
+得遞迴式 $T(n)=2T(n/2)+O(n)$，解得
+\[
+  T(n) = O(n\log n) \quad (\text{遠優於直接多項式乘法的 } O(n^2)).
+\]
+
+\begin{definition}[Negacyclic convolution]
+  因 $\Phi_{2n}(x)=x^n+1$，故 $x^n \equiv -1$，環乘法等價於\textbf{負循環卷積}：
+  \[
+    (a * b)_k \;=\; \sum_{i+j=k} a_i b_j \;-\!\!\sum_{i+j=k+n}\!\! a_i b_j ,
+    \qquad 0\le k < n,
+  \]
+  即「超出次數 $n$ 的項繞回時須變號」——這是 Ring-LWE 取
+  power-of-two 分圓環（而非一般分圓環）以簡化運算的關鍵原因。
+\end{definition}
+
+\subsection{2.4 \;差異理想與逆差理想：對偶格的跡配對運算 \hfill {\footnotesize\color{gray}(\textasciitilde 6 分鐘)}}
+
+\textbf{差異理想（different）}由極小多項式的導數生成：
+\[
+  \mathfrak{D}_{K/\mathbb{Q}} = \bigl(\Phi_{2n}'(\zeta)\bigr) = \bigl(n\zeta^{n-1}\bigr) = (n)
+\]
+（因 $\zeta^{n-1}=-\zeta^{-1}$ 為 $\mathcal{O}_K$ 中的單位元）。
+\textbf{逆差理想（codifferent）}則是跡型式 $\langle a,b\rangle = \mathrm{Tr}_{K/\mathbb{Q}}(ab)$
+意義下 $\mathcal{O}_K$ 的\textbf{對偶格}：
+\[
+  \mathfrak{D}^{-1} = \{x\in K : \mathrm{Tr}_{K/\mathbb{Q}}(x\,\mathcal{O}_K)\subset\mathbb{Z}\} = \tfrac{1}{n}\,\mathcal{O}_K .
+\]
+
+\begin{proofbox}[$\mathfrak{D}^{-1}=\tfrac{1}{n}\mathcal{O}_K$ 的跡計算驗證]
+  以 $\{1,\zeta,\ldots,\zeta^{n-1}\}$ 為 $\mathbb{Z}$-基，逐一計算特徵和：
+  \[
+    \mathrm{Tr}_{K/\mathbb{Q}}(\zeta^j)
+    = \sum_{k\ \mathrm{odd}} e^{i\pi jk/n}
+    = e^{i\pi j/n}\sum_{k=0}^{n-1} e^{2\pi i jk/n}
+    = \begin{cases} n, & j=0,\\[2pt] 0, & 1\le j\le n-1.\end{cases}
+  \]
+  故對 $x=\frac1n\sum c_j\zeta^j$，$y=\sum a_k\zeta^k\in\mathcal{O}_K$，
+  $\mathrm{Tr}(xy)=\frac1n\,\mathrm{Tr}\bigl((\sum c_j\zeta^j)(\sum a_k\zeta^k)\bigr)\in\mathbb{Z}$
+  恰好成立；又 $\mathrm{Tr}(\frac1m\cdot 1)=\frac{n}{m}\in\mathbb{Z} \Rightarrow m\mid n$，
+  故反向包含亦成立，得 $\mathfrak{D}^{-1}=\frac1n\mathcal{O}_K$。
+\end{proofbox}
+
+\textbf{密碼學意義}：嚴格的 Ring-LWE 表述中，誤差的自然定義域是
+$\mathfrak{D}^{-1}/q\mathfrak{D}^{-1} = \tfrac{1}{n}R_q$（而非 $R_q$ 本身），
+因為唯有對偶格 $\mathfrak{D}^{-1}$ 才能讓誤差分布在跡配對下保持
+\textbf{代數不變性}——確保安全歸約嚴密成立。
+
+\subsection{2.5 \;Ring-LWE 樣本構造與安全歸約鏈 \hfill {\footnotesize\color{gray}(\textasciitilde 4 分鐘)}}
+
+\begin{definition}[Ring-LWE 假設，LPR 2010]
+  秘密 $s\in R_q$，誤差 $e\leftarrow\chi_R$（$R$ 上窄寬度離散高斯）。取樣
+  \[
+    a \xleftarrow{\$} R_q,\qquad b = a\cdot s + e \in R_q,
+  \]
+  則 $(a,b)$ 與 $R_q\times R_q$ 上均勻分布在計算上不可區分（Decision-RLWE）；
+  Search 版本則要求由多筆 $(a,b)$ 還原 $s$。
+\end{definition}
+
+\textbf{安全歸約運算鏈}（量子歸約，LPR 2010）：
+\[
+  \text{worst-case Ideal-SVP}_\gamma
+  \;\xrightarrow{\ \text{量子多項式時間}\ }\;
+  \text{average-case Ring-LWE}
+  \;\Longrightarrow\;
+  \text{破解 FIPS 203/204（Kyber/Dilithium）困難}.
+\]
+\textbf{效率對照}（運算成本）：
+
+\begin{center}\small
+\begin{tabular}{l c c c}
+\hline
+& 金鑰大小 & 環乘法成本 & 安全基礎 \\
+\hline
+LWE（Regev 2005） & $O(n^2)$ & $O(n^2)$（一般矩陣乘法） & 任意格上 SVP \\
+Ring-LWE（LPR 2010） & $O(n)$ & $O(n\log n)$（NTT） & 理想格上 ideal-SVP \\
+\hline
+\end{tabular}
+\end{center}
+
+代數結構（分圓環、CRT、NTT、對偶格）正是讓 Ring-LWE
+在維持與 LWE 相同安全保證的同時，把運算成本由 $O(n^2)$ 壓低到
+$O(n\log n)$ 的關鍵——也是 Kyber／Dilithium 等 NIST 後量子標準
+得以實用化部署的數論基礎。
+
+\vspace{4pt}
+\noindent\rule{\linewidth}{0.4pt}
+\begin{center}\small\color{gray}
+  時間配置：Part 1 \textasciitilde 10 分鐘（簡述）\quad+\quad
+  Part 2 \textasciitilde 30 分鐘（核心，§2.1–§2.5 各 4–8 分鐘）\quad
+  $\approx$ \textbf{40 分鐘}\\[3pt]
+  O.\ Regev, \textit{J.\ ACM} \textbf{56}(6), 2009.\;
+  V.\ Lyubashevsky--C.\ Peikert--O.\ Regev, \textit{J.\ ACM} \textbf{60}(6), 2013.\\[1pt]
+  H.\ Minkowski, \textit{Geometrie der Zahlen}, 1896.\;
+  J.\ Neukirch, \textit{Algebraic Number Theory}, Springer, 1999.\;
+  NIST FIPS 203/204, 2024.
+\end{center}
+
+\end{document}
