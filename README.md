@@ -8,25 +8,16 @@
 
 | 檔案 | 說明 |
 |---|---|
-| `presentation_v2.pptx` / `presentation_v2.pdf` | 主報告投影片（41 頁） |
-| `presentation_script_v2.tex` / `.pdf` | 報告講稿 |
-| `make_ppt_v2.py` | 投影片生成程式（python-pptx） |
-| `summary.pdf` | 5 頁書面摘要 |
-| `補充說明.pdf` | 幾何數論 / 分圓域 / Dedekind 整環 / Ring-LWE 補充說明 |
-| `minkowski_viz.png` | Minkowski 第一定理視覺化圖（n=2） |
-| `speaker_script.txt` | 口頭報告草稿 |
-| `0520/summary.tex` / `.pdf` | 第二版書面摘要：Minkowski 定理完整證明 + 分圓域 + Ring-LWE 代數結構 |
+| `summary.pdf` / `summary.tex` | 書面摘要（含 Minkowski 定理完整證明、分圓域與理想格、Ring-LWE 代數結構） |
+| `report_script.pdf` / `.tex` | 口頭報告大綱（約 40 分鐘：格與 Minkowski 定理簡述 10 分鐘 + Ring-LWE 數論結構與其數學運算 30 分鐘） |
+| `ring_lwe_summary.pdf` / `ring_lwe_summary_zh.pdf` | 早期一頁式精簡大綱草稿（英文 / 中文對照版） |
 
 ## 編譯方式
 
 LaTeX 來源以 `xelatex` 編譯（需 xeCJK 與 Microsoft JhengHei 字型）：
 ```bash
 xelatex summary.tex
-xelatex presentation_script_v2.tex
-```
-投影片重新生成：
-```bash
-python make_ppt_v2.py
+xelatex report_script.tex
 ```
 
 ---
