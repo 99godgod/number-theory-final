@@ -1,5 +1,5 @@
 %!TEX program = xelatex
-\documentclass[12pt, a4paper]{article}
+\documentclass[10.5pt, a4paper]{article}
 
 \usepackage{fontspec}
 \usepackage{xeCJK}
@@ -8,228 +8,307 @@
 \usepackage{titlesec}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{amsthm}
 \usepackage{xcolor}
 \usepackage{fancyhdr}
 \usepackage{tcolorbox}
 
-\geometry{top=2cm, bottom=2cm, left=2.5cm, right=2.5cm}
+\geometry{top=1.6cm, bottom=1.6cm, left=2.0cm, right=2.0cm}
 \setlength{\headheight}{14pt}
 
 \setCJKmainfont{Microsoft JhengHei}
 \setmainfont{Times New Roman}
 
 \definecolor{accent}{RGB}{30, 80, 160}
-\definecolor{notebg}{RGB}{255, 252, 220}
-\definecolor{noteborder}{RGB}{180, 140, 0}
+\definecolor{thmfill}{RGB}{237, 246, 255}
+\definecolor{warnfill}{RGB}{255, 243, 235}
 
 \tcbuselibrary{breakable}
 
 \pagestyle{fancy}
 \fancyhf{}
 \renewcommand{\headrulewidth}{0.4pt}
-\fancyhead[R]{\small\color{gray} 黃崇晉 | L16141149 | 0520}
+\fancyhead[R]{\small\color{gray} 黃崇晉 | L16141149 | 數論（一）2026}
 \fancyfoot[C]{\small\thepage}
 
 \titleformat{\section}[block]
-  {\large\bfseries\color{accent}}
-  {}
-  {0pt}
-  {}
-  [\vspace{2pt}\titlerule\vspace{4pt}]
+  {\normalsize\bfseries\color{accent}}{}
+  {0pt}{}
+  [\vspace{1pt}\titlerule\vspace{3pt}]
 
-\setstretch{1.45}
-\setlength{\parskip}{5pt}
+\setstretch{1.22}
+\setlength{\parskip}{2.5pt}
 \setlength{\parindent}{0pt}
+
+% compact list
+\setlength{\topsep}{2pt}
+\setlength{\partopsep}{0pt}
+\makeatletter
+\let\orig@itemize\itemize
+\renewcommand{\itemize}{%
+  \orig@itemize\setlength{\itemsep}{1pt}\setlength{\parsep}{0pt}%
+}
+\makeatother
+
+% theorem environments
+\newtheoremstyle{cpt}{2pt}{2pt}{\normalfont}{0pt}{\bfseries\color{accent}}{.}{0.45em}{}
+\theoremstyle{cpt}
+\newtheorem{definition}{定義}
+\newtheorem{lemma}{引理}
+\newtheorem{theorem}{定理}
+\newtheorem{corollary}{推論}
+
+% proof in a box
+\newenvironment{proofbox}[1][證明]{%
+  \begin{tcolorbox}[colback=thmfill, colframe=accent!40,
+    breakable, left=5pt, right=5pt, top=3pt, bottom=3pt, boxrule=0.4pt]
+  \noindent\textbf{\color{accent}#1.}\quad\small
+}{%
+  \hfill$\square$\end{tcolorbox}\vspace{-1pt}
+}
 
 \begin{document}
 
-% 標題區
+% ── Title ─────────────────────────────────────────────────────────────
 \begin{center}
   {\LARGE\bfseries\color{accent}
-    Ring-LWE and Ideal Lattice Cryptography}\\[4pt]
-  {\large\bfseries Ring-LWE 與理想格密碼學}\\[2pt]
-  {\normalsize Algebraic Number Theory Meets Post-Quantum Security
-    \quad|\quad 代數數論與後量子安全的交匯}\\[2pt]
-  {\normalsize\itshape\color{accent} 副題：SVP/CVP 的困難性與求解方法}\\[8pt]
-  \rule{\linewidth}{0.8pt}\\[4pt]
-  {\small 黃崇晉（Chung-Chin Huang）\quad 學號：L16141149
-    \quad 數論（一）\quad 2026 春季，國立成功大學}
+    Ring-LWE and Ideal Lattice Cryptography}\\[2pt]
+  {\large\bfseries Ring-LWE 與理想格密碼學}\\[1pt]
+  {\small\itshape\color{accent}
+    幾何數論、分圓域、Dedekind 整環與後量子安全基礎}\\[5pt]
+  \rule{\linewidth}{0.8pt}\\[2pt]
+  {\small 黃崇晉（Chung-Chin Huang）\;|\; L16141149
+    \;|\; 數論（一）\;|\; 2026 春季，國立成功大學}
 \end{center}
 
-\vspace{4pt}
+\vspace{1pt}
 
-%% ─────────────────────────────────────────────
-\section{研究動機 \small\normalfont\color{gray}(Motivation)}
+%% ──────────────────────────────────────────────────────────────────────
+\section{Section 1 \;—\; 幾何數論基礎：格與 Minkowski 定理
+  \textnormal{\small\color{gray}(Geometry of Numbers)}}
 
-\textbf{Classical public-key cryptography is provably broken by quantum computation.}
-RSA（安全性基於整數分解）與 ECC（安全性基於橢圓曲線離散對數）是當代公鑰基礎設施的兩大支柱。
-\textbf{Shor 演算法}（P.\ Shor, FOCS 1994）對兩者皆能以量子多項式時間
-$\widetilde{O}((\log N)^3)$ 求解，其核心為\textbf{Period Finding}——利用量子傅立葉轉換
-在指數時間內找出函數的週期，而分解 $N$ 等同於求乘法群中元素的階（即週期）。相較之下，
-古典最佳演算法 GNFS 需亞指數時間 $\exp(\widetilde{O}((\log N)^{1/3}))$。
+\begin{definition}[格（Lattice）]
+  取 $\mathbb{R}^n$ 中 $n$ 個線性獨立向量 $b_1,\ldots,b_n$，其整數線性組合的集合
+  $\mathcal{L}=\sum_{i=1}^n\mathbb{Z}\,b_i\subset\mathbb{R}^n$
+  稱為秩 $n$ 的\textbf{格}。
+  基底矩陣 $B=[b_1|\cdots|b_n]$ 的行列式絕對值
+  $\det(\mathcal{L}):=|\det B|$ 稱為\textbf{覆積}，與基底選擇無關。
+\end{definition}
 
-\textbf{格密碼學}（Lattice-based cryptography）是目前最受矚目的後量子替代方案：
-安全性可在最壞情形下歸約至格上的幾何困難問題——\textit{最短向量問題（SVP）}
-與\textit{最近向量問題（CVP）}——迄今無已知量子多項式時間演算法。
-本報告聚焦於 SVP/CVP 的\textbf{困難性根源}與\textbf{實用求解演算法}，
-並說明其如何支撐 NIST 後量子標準（FIPS 203/204）之安全性。
+先證 Blichfeldt 引理作為工具，再推導 Minkowski 定理，最後給出在代數數論中的應用。
 
-%% ─────────────────────────────────────────────
-\section{Step 1 \;—\; 格與困難問題 \small\normalfont\color{gray}(Lattices and Hard Problems)}
+\begin{lemma}[Blichfeldt 1914]
+  設 $\mathcal{L}\subset\mathbb{R}^n$ 為格，$S\subset\mathbb{R}^n$ 為 Lebesgue 可測集。
+  若 $\mathrm{vol}(S)>\det(\mathcal{L})$，則存在相異 $x,y\in S$ 使得 $x-y\in\mathcal{L}$。
+\end{lemma}
 
-\textbf{格的基本定義。}
-秩為 $n$ 的格（lattice）是 $\mathbb{R}^n$ 中由線性獨立向量
-$b_1,\ldots,b_n$ 生成的離散子群：
+\begin{proofbox}[證明（引理 1）]
+  設 $\mathcal{F}$ 為 $\mathcal{L}$ 的基本域，$\mathrm{vol}(\mathcal{F})=\det(\mathcal{L})$。
+  令 $S_v:=S\cap(v+\mathcal{F})$ 並令 $S_v':=S_v-v\subset\mathcal{F}$；
+  $\{S_v\}_{v\in\mathcal{L}}$ 為 $S$ 的不相交分解，故
+  $\sum_{v\in\mathcal{L}}\mathrm{vol}(S_v')=\mathrm{vol}(S)>\mathrm{vol}(\mathcal{F})$。
+  由鴿巢原理，存在相異 $v_1,v_2\in\mathcal{L}$ 使 $S_{v_1}'\cap S_{v_2}'\neq\varnothing$；
+  取 $z$ 於此交集，令 $x=z+v_1,\,y=z+v_2\in S$，
+  則 $x-y=v_1-v_2\in\mathcal{L}\setminus\{0\}$。
+\end{proofbox}
+
+\begin{theorem}[Minkowski 第一定理 1896]
+  設 $\mathcal{L}\subset\mathbb{R}^n$ 為格，$S\subset\mathbb{R}^n$ 為中心對稱凸體
+  （$x\in S\Rightarrow{-x}\in S$，$S$ 有界閉凸）。
+  若 $\mathrm{vol}(S)>2^n\det(\mathcal{L})$，則 $S$ 含至少一個非零格點。
+\end{theorem}
+
+\begin{proofbox}[證明（定理 1）]
+  令 $\tfrac{1}{2}S=\{\tfrac{1}{2}x:x\in S\}$，則
+  $\mathrm{vol}(\tfrac{1}{2}S)=\tfrac{\mathrm{vol}(S)}{2^n}>\det(\mathcal{L})$。
+  由引理 1，存在相異 $p,q\in\tfrac{1}{2}S$ 使 $p-q\in\mathcal{L}$。
+  由 $2p,2q\in S$，中心對稱知 $-2q\in S$，凸性得
+  $p-q=\tfrac{2p+(-2q)}{2}\in S$；故 $p-q\in S\cap\mathcal{L}\setminus\{0\}$。
+\end{proofbox}
+
+\textbf{應用：Minkowski 界與理想存在性。}
+設 $K$ 為次數 $n=r_1+2r_2$ 的數域，$\Delta_K$ 為判別式，
+$\mathcal{O}_K$ 為整數環。透過標準嵌入 $\sigma:K\hookrightarrow\mathbb{R}^{r_1}\times\mathbb{C}^{r_2}\cong\mathbb{R}^n$，
+每個理想 $\mathfrak{a}\subset\mathcal{O}_K$ 給出格 $\sigma(\mathfrak{a})$。
+對乘積條件 $\prod_i|x_i|^{n_i}=1$（$n_i=1$ 或 $2$）的中心對稱凸體套用定理 1，可得：
+
+\begin{corollary}[Minkowski 界]
+  $\mathrm{Cl}(K)$ 中每個理想類均含範數有界的整數理想 $\mathfrak{a}$：
+  \[
+    N(\mathfrak{a})\;\leq\;
+    M_K\;:=\;\sqrt{|\Delta_K|}\cdot
+    \Bigl(\tfrac{4}{\pi}\Bigr)^{r_2}\cdot\frac{n!}{n^n}.
+  \]
+  此式保證 $M_K<\infty$，從而 $\mathrm{Cl}(K)$ 為有限群（類數有限）。
+\end{corollary}
+
+Minkowski 定理的\textbf{非構造性}連結幾何（格體積）與算術（理想範數）：
+它保證格點\emph{存在}，卻不給出尋找方法——這既是 SVP 困難性的根源，也是密碼學安全性的幾何基石。
+
+%% ──────────────────────────────────────────────────────────────────────
+\section{Section 2 \;—\; 分圓域與理想格結構
+  \textnormal{\small\color{gray}(Cyclotomic Fields and Ideal Lattices)}}
+
+\textbf{分圓域設定。}
+令 $n=2^k$，$\zeta=\zeta_{2n}=e^{i\pi/n}$ 為第 $2n$ 個本原單位根，
+$\Phi_{2n}(x)=x^n+1$（第 $2n$ 個分圓多項式，$n=2^k$ 時在 $\mathbb{Q}$ 上不可約），
+$K=\mathbb{Q}(\zeta)$，$[K:\mathbb{Q}]=n$，$r_1=0$，$r_2=n/2$。
+
+\begin{definition}[Dedekind 整環]
+  $\mathcal{O}_K=\mathbb{Z}[\zeta]$（$K$ 的代數整數環）是 \textbf{Dedekind 整環}：
+  Noetherian、整閉，且每個非零質理想皆為極大理想。
+  由此，$\mathcal{O}_K$ 中每個非零理想均有唯一的質理想積分解：
+  $\mathfrak{a}=\mathfrak{p}_1^{e_1}\cdots\mathfrak{p}_r^{e_r}$（質理想唯一分解性）。
+\end{definition}
+
+\begin{definition}[標準嵌入（Canonical Embedding）]
+  $K$ 有 $n$ 個複數嵌入 $\sigma_j:K\to\mathbb{C}$，定義為 $\sigma_j(\zeta)=\zeta^{2j-1}$，$j=1,\ldots,n$。
+  \textbf{標準嵌入}為
+  \[
+    \sigma\colon K\;\longrightarrow\;\mathbb{C}^n,\quad
+    \alpha\;\longmapsto\;(\sigma_1(\alpha),\ldots,\sigma_n(\alpha)).
+  \]
+  因共軛對稱 $\sigma_{n+1-j}(\alpha)=\overline{\sigma_j(\alpha)}$，
+  $\sigma$ 的像落在同構於 $\mathbb{R}^n$ 的子空間 $H\subset\mathbb{C}^n$ 中。
+  標準嵌入使環乘法與 $\mathbb{C}^n$ 中的逐分量乘法相容，
+  是連結代數結構與格幾何的橋樑。
+\end{definition}
+
+\textbf{判別式與格行列式。}
+$\sigma(\mathcal{O}_K)\subset H$ 是秩 $n$ 的格，其覆積由\textbf{判別式} $\Delta_K$ 決定：
 \[
-  \Lambda(B) \;=\; \Bigl\{\,\textstyle\sum_{i=1}^n z_i\,b_i \;\Big|\; z_i\in\mathbb{Z}\,\Bigr\},
-  \qquad B = [b_1\,|\,\cdots\,|\,b_n]\in\mathbb{R}^{n\times n}.
+  \det\bigl(\sigma(\mathcal{O}_K)\bigr)\;=\;\sqrt{|\Delta_K|}.
 \]
-\textbf{覆積}（covolume）$\det(\Lambda):=|\det B|$ 是 $\Lambda$ 的不變量。
-\textbf{相繼極小}（successive minima）定義為
+對 $K=\mathbb{Q}(\zeta_{2n})$（$n=2^k$），利用分圓域判別式公式
+$|\Delta_K|=\tfrac{(2n)^n}{2^n}=n^n$，故 $\det(\sigma(\mathcal{O}_K))=n^{n/2}$。
+
+\begin{definition}[理想格與範數]
+  $\mathcal{O}_K$ 的分式理想 $\mathfrak{a}$ 透過標準嵌入給出
+  $\sigma(\mathfrak{a})\subset H$，稱為\textbf{理想格}，秩 $n$，且在 $\mathcal{O}_K$ 的乘法作用下封閉。
+  理想範數 $N(\mathfrak{a})=[\mathcal{O}_K:\mathfrak{a}]$ 與覆積的關係為
+  \[
+    \det\bigl(\sigma(\mathfrak{a})\bigr)\;=\;N(\mathfrak{a})\cdot\sqrt{|\Delta_K|},
+  \]
+  因為 $\sigma(\mathfrak{a})$ 是 $\sigma(\mathcal{O}_K)$ 的指數 $N(\mathfrak{a})$ 子格。
+\end{definition}
+
+%% ──────────────────────────────────────────────────────────────────────
+\section{Section 3 \;—\; Ring-LWE 的數論結構
+  \textnormal{\small\color{gray}(Number-Theoretic Structure of Ring-LWE)}}
+
+\textbf{問題設定。}令 $R=\mathcal{O}_K=\mathbb{Z}[x]/\Phi_{2n}(x)$，$q$ 為正整數，
+商環 $R_q=R/qR\cong\mathbb{Z}_q[x]/\Phi_{2n}(x)$。
+
+\begin{definition}[Ring-LWE（LPR 2010）]
+  對秘密 $s\in R_q$ 與誤差分布 $\chi_R$（$R$ 上的離散 Gaussian），
+  \textbf{Ring-LWE 假設}稱：分布
+  $(a,\;a\cdot s+e)$（$a\overset{\$}{\leftarrow}R_q$，$e\leftarrow\chi_R$）
+  與 $R_q\times R_q$ 上均勻分布計算不可區分。
+  Lyubashevsky--Peikert--Regev（2010）建立量子歸約：
+  worst-case ideal-SVP$_\gamma\;\to\;$average-case Ring-LWE。
+\end{definition}
+
+\textbf{質理想分解與 $R_q$ 的結構。}
+對質數 $q\nmid 2n$，$q$ 在 $\mathcal{O}_K$ 中的分解由 $\Phi_{2n}(x)\bmod q$ 的因式分解決定：
 \[
-  \lambda_i(\Lambda) := \inf\bigl\{r>0 :
-    \dim\mathrm{span}(\Lambda\cap\overline{B(0,r)})\geq i\bigr\},\quad i=1,\ldots,n.
+  \Phi_{2n}(x)\;\equiv\;\prod_{i=1}^{g}\phi_i(x)^{e_i}\pmod{q},\quad
+  \deg\phi_i=f,\quad e\cdot f\cdot g=n.
+\]
+對應地 $q\mathcal{O}_K=\mathfrak{q}_1^{e_1}\cdots\mathfrak{q}_g^{e_g}$，
+各質理想範數 $N(\mathfrak{q}_i)=q^f$。\textbf{完全分裂}（$e=1,\,f=1,\,g=n$）當且僅當
+$q\equiv 1\pmod{2n}$，此時 $\mathbb{F}_q^\times$ 含 $2n$ 次本原單位根 $\omega$，
+$\Phi_{2n}(x)\equiv\prod_{j=1}^n(x-\omega_j)\pmod{q}$，由中國剩餘定理：
+\[
+  R_q\;\cong\;\mathbb{F}_q^n\quad(\text{環同構}).
 \]
 
-\textbf{核心困難問題。}
-\begin{itemize}\setlength{\itemsep}{2pt}
-  \item $\mathrm{SVP}_\gamma$：找 $v\in\Lambda\setminus\{0\}$ 使 $\|v\|\leq\gamma\,\lambda_1(\Lambda)$。
-  \item $\mathrm{CVP}$：給定目標點 $y\in\mathbb{R}^n$，計算
-    $\mathrm{dist}(y,\Lambda):=\min_{x\in\Lambda}\|x-y\|$，並找到最近格點。
-  \item $\mathrm{BDD}$（Bounded Distance Decoding）：CVP 的特例，
-    已知 $\mathrm{dist}(y,\Lambda)<\lambda_1/2$，此時最近格點唯一。
-    \textbf{BDD 是 LWE 安全性的幾何來源}：LWE 的樣本誤差 $e$ 使目標點
-    落在距離格 $\Lambda$ 不到 $\lambda_1/2$ 的位置。
+\begin{definition}[NTT 的數論根源]
+  完全分裂條件使 $R_q$ 的乘法化為 $\mathbb{F}_q^n$ 中的逐分量乘法：
+  \[
+    (a\cdot b)\bmod\Phi_{2n}(x)
+    \;\longleftrightarrow\;
+    \bigl(\hat{a}(\omega_j)\cdot\hat{b}(\omega_j)\bigr)_{j=1}^n.
+  \]
+  評估映射 $a\mapsto(\hat{a}(\omega_1),\ldots,\hat{a}(\omega_n))$ 即為\textbf{數論變換（NTT）}，
+  利用 $\omega_j$ 的根號結構以 Cooley-Tukey 蝴蝶運算可在 $O(n\log n)$ 時間完成，
+  遠優於直接多項式乘法的 $O(n^2)$。
+\end{definition}
+
+\textbf{差異理想與逆差理想。}
+$\mathcal{O}_K$ 對 $\mathbb{Q}$ 的\textbf{差異理想}（different）由最小多項式的導數生成：
+\[
+  \mathfrak{D}_{K/\mathbb{Q}}\;=\;\bigl(\Phi_{2n}'(\zeta)\bigr)
+  \;=\;\bigl(n\zeta^{n-1}\bigr)
+  \;=\;(n),
+\]
+因 $\zeta^{n-1}=-\zeta^{-1}$ 為 $\mathcal{O}_K$ 中的可逆元（單位根）。
+\textbf{逆差理想}（codifferent）為跡型式意義下 $\mathcal{O}_K$ 的對偶格：
+\[
+  \mathfrak{D}^{-1}
+  \;=\;\bigl\{x\in K:\mathrm{Tr}_{K/\mathbb{Q}}(x\,\mathcal{O}_K)\subset\mathbb{Z}\bigr\}
+  \;=\;\tfrac{1}{n}\,\mathcal{O}_K.
+\]
+
+\begin{proofbox}[$\mathfrak{D}^{-1}=\tfrac{1}{n}\mathcal{O}_K$ 的驗證]
+  $\{1,\zeta,\ldots,\zeta^{n-1}\}$ 為 $\mathcal{O}_K$ 的 $\mathbb{Z}$-基。
+  利用字元求和，對 $0\le j\le n-1$：
+  \[
+    \mathrm{Tr}_{K/\mathbb{Q}}(\zeta^j)
+    \;=\;\sum_{k\text{ odd}}e^{i\pi jk/n}
+    \;=\;e^{i\pi j/n}\sum_{k=0}^{n-1}e^{2\pi ijk/n}
+    \;=\;\begin{cases}n&j=0,\\0&1\le j\le n-1.\end{cases}
+  \]
+  故對 $x=\frac{1}{n}\sum c_j\zeta^j\in\frac{1}{n}\mathcal{O}_K$ 與任意
+  $y=\sum a_k\zeta^k\in\mathcal{O}_K$：
+  $\mathrm{Tr}(xy)=\frac{1}{n}\mathrm{Tr}((\sum c_j\zeta^j)(\sum a_k\zeta^k))=\frac{n}{n}\cdot(\text{常數項})\in\mathbb{Z}$。
+  逆包含由 $\mathrm{Tr}(\frac{1}{m}\cdot 1)=\frac{n}{m}\in\mathbb{Z}$ 要求 $m\mid n$ 得出。
+\end{proofbox}
+
+\textbf{密碼學意義。}Ring-LWE 的嚴格表述中，誤差的自然定義域為
+$\mathfrak{D}^{-1}/q\mathfrak{D}^{-1}=\frac{1}{n}R_q$（而非 $R_q$）。
+這是因為跡配對 $\langle a,b\rangle=\mathrm{Tr}_{K/\mathbb{Q}}(ab)$ 使
+$\mathfrak{D}^{-1}$ 恰為 $\mathcal{O}_K$ 在此配對下的\textbf{對偶格}，
+確保誤差分布的代數不變性與安全歸約的嚴密性。
+
+%% ──────────────────────────────────────────────────────────────────────
+\section{Section 4 \;—\; 應用與延伸
+  \textnormal{\small\color{gray}(Applications and Open Problems)}}
+
+\textbf{NIST 後量子標準（2024 年 8 月）。}
+\begin{itemize}
+  \item \textbf{FIPS 203（ML-KEM $=$ Kyber）}：金鑰封裝，基於 Module-LWE
+    （Ring-LWE 在模組格 $R_q^{k\times k}$ 上的推廣）；
+    Kyber-512 使用 $n=256$，$q=3329$，NIST Level I（攻擊難度 $\approx 2^{118}$）。
+  \item \textbf{FIPS 204（ML-DSA $=$ Dilithium）}：數位簽章，
+    基於 Module-LWE 與 Module-SIS；
+    安全性最終歸約至理想格上的 SVP/CVP 困難性。
 \end{itemize}
-
-\begin{tcolorbox}[
-  colback=notebg, colframe=noteborder,
-  title={\bfseries Minkowski 第一定理（完整陳述）},
-  fonttitle=\small, breakable
-]
-設 $\Lambda\subset\mathbb{R}^n$ 為秩 $n$ 的格，$S\subset\mathbb{R}^n$ 為中心對稱的凸體。
-若 $\mathrm{vol}(S)>2^n\det(\Lambda)$，則 $S$ 包含至少一個非零格點 $v\in\Lambda\setminus\{0\}$。
-\end{tcolorbox}
-
-\textbf{SVP 上界推導。} 取中心對稱立方體 $C_r:=[-r,r]^n$，體積 $(2r)^n$。
-當 $r>\det(\Lambda)^{1/n}$ 時，$(2r)^n>2^n\det(\Lambda)$，由 Minkowski 定理知
-$C_r$ 含非零格點 $v$，故 $\|v\|_\infty\leq r$；再由 $\|v\|_2\leq\sqrt{n}\,\|v\|_\infty$，
-令 $r\searrow\det(\Lambda)^{1/n}$ 得
-\[
-  \lambda_1(\Lambda)\;\leq\;\sqrt{n}\cdot\det(\Lambda)^{1/n}.
-\]
-利用 Hermite 常數可進一步精化為 $\lambda_1(\Lambda)\leq\sqrt{\gamma_n}\,\det(\Lambda)^{1/n}$，
-其中 $\gamma_n\leq\tfrac{2n}{\pi e}+o(n)$。
-
-%% ─────────────────────────────────────────────
-\section{Step 2 \;—\; SVP 求解：基底縮短 \small\normalfont\color{gray}(Basis Reduction)}
-
-\textbf{Gram-Schmidt 正交化。}
-給定基底 $b_1,\ldots,b_n$，遞迴定義正交投影：
-\[
-  b_i^* \;=\; b_i \;-\; \sum_{j<i}\mu_{ij}\,b_j^*,
-  \qquad \mu_{ij} = \frac{\langle b_i, b_j^*\rangle}{\|b_j^*\|^2}.
-\]
-$b_i^*$ 本身通常\textbf{不是}格點，但 $\|b_i^*\|$ 衡量第 $i$ 個基底向量正交部分的長度，
-是分析基底品質的核心工具。
-
-\textbf{LLL 演算法}（Lenstra--Lenstra--Lovász, 1982）。LLL 對基底施加兩個條件：
-\begin{itemize}\setlength{\itemsep}{1pt}
-  \item \textit{Size condition}：$|\mu_{ij}|\leq\tfrac{1}{2}$，$\forall\, j<i$。
-  \item \textit{Lovász condition}：$\|b_i^*\|^2\geq
-    \bigl(\delta-\mu_{i,i-1}^2\bigr)\|b_{i-1}^*\|^2$，其中 $\delta\in(\tfrac{1}{4},1)$，常取 $\tfrac{3}{4}$。
-\end{itemize}
-
-\begin{tcolorbox}[
-  colback=notebg, colframe=noteborder,
-  title={\bfseries LLL 輸出保證},
-  fonttitle=\small
-]
-LLL 在多項式時間 $\mathrm{poly}(n,\log\|B\|)$ 內輸出 LLL-reduced 基底，滿足
-\[
-  \|b_1\| \;\leq\; 2^{(n-1)/2}\,\lambda_1(\Lambda).
-\]
-近似因子 $2^{(n-1)/2}$ 隨維度指數增長，但時間代價僅為多項式。
-\end{tcolorbox}
-
-\textbf{BKZ-$\beta$（Block Korkine-Zolotarev）。} 以區塊大小 $\beta$ 對基底
-連續套用精確 SVP 求解器（oracle）。近似因子降至 $\beta^{n/(2\beta)}$，
-是\textbf{實務格攻擊的主力工具}（如 Kyber 安全性估算所用）。
-
-\textbf{精確 SVP：Sieving。}
-Ajtai--Kumar--Sivakumar（AKS）sieving 演算法精確求解 SVP，
-時間複雜度 $2^{O(n)}$；最佳量子 sieving（Laarhoven 2016）可降至 $2^{0.265n}$。
-在格密碼安全性分析中，sieving 決定了攻擊成本的漸近下界。
-
-%% ─────────────────────────────────────────────
-\section{Step 3 \;—\; CVP 求解：Babai 演算法 \small\normalfont\color{gray}(Babai's Algorithms)}
-
-\textbf{Babai Rounding（Round-off 演算法，1986）。}
-給定目標點 $y\in\mathbb{R}^n$ 與基底矩陣 $B$，計算係數向量後四捨五入：
-\[
-  \hat{z} = \bigl\lfloor B^{-1}y\bigr\rceil \in\mathbb{Z}^n,
-  \qquad \text{輸出} \; B\hat{z}\in\Lambda.
-\]
-此法執行快速（$O(n^2)$），但對品質差的基底近似誤差大，無法保證找到真正最近格點。
-
-\textbf{Babai Nearest Plane（最近超平面演算法）。}
-採用 Gram-Schmidt 基底，從最高維度 $n$ 逐維遞推投影：在每一步取最近的超平面，
-再將問題降維至 $n-1$ 維子格繼續解算。
-
-\begin{tcolorbox}[
-  colback=notebg, colframe=noteborder,
-  title={\bfseries Nearest Plane 正確性條件},
-  fonttitle=\small
-]
-若基底為 LLL-reduced，且 $\mathrm{dist}(y,\Lambda)<\tfrac{1}{2}\,\|b_n^*\|$（其中
-$b_n^*$ 為最短 Gram-Schmidt 向量），則 Nearest Plane 在多項式時間內精確解 CVP。
-在「good basis」條件下，此即 BDD 的高效解法。
-\end{tcolorbox}
-
-\textbf{BDD $\to$ LWE 的幾何連結。}
-LWE 的樣本形如 $b = As + e \pmod{q}$，其中 $A\in\mathbb{Z}_q^{m\times n}$ 為公開矩陣、
-$s\in\mathbb{Z}_q^n$ 為秘密、$e$ 為小誤差向量。
-將 $b$ 視為目標點，格 $\Lambda=q\mathbb{Z}^m + A\mathbb{Z}^n$ 的最近格點即為 $As$，
-誤差 $e$ 使得 $\mathrm{dist}(b,\Lambda)=\|e\|<\lambda_1/2$——這恰是 BDD 的假設。
-因此，\textbf{解 LWE 等同於解 BDD instance}，此連結是整個格密碼安全性歸約的幾何核心。
-
-%% ─────────────────────────────────────────────
-\section{Step 4 \;—\; 應用與開放問題 \small\normalfont\color{gray}(Applications and Open Problems)}
-
-\textbf{NIST 後量子標準。}
-2024 年 8 月，NIST 正式公布首批後量子密碼標準：
-\begin{itemize}\setlength{\itemsep}{1pt}
-  \item \textbf{FIPS 203（ML-KEM）}：以 Module-LWE 為基礎的金鑰封裝機制，
-    源自 Kyber。數學基礎為 Ring-LWE 在模組格上的推廣。
-  \item \textbf{FIPS 204（ML-DSA）}：以 Module-LWE/SIS 為基礎的數位簽章演算法，
-    源自 Dilithium。
-\end{itemize}
-
-\textbf{安全參數估算（Kyber-512）。}
-Kyber-512 使用參數 $n=256$，$q=3329$，誤差分布 $\eta=3$（二項分布近似 Gaussian）。
-針對格攻擊（BKZ-$\beta$ + sieving）的攻擊成本估算約為 $2^{118}$ 次操作，
-達到 NIST Security Level I（等同 AES-128）。此估算依賴對 BKZ 區塊大小 $\beta$ 與
-sieving 成本之精確模型。
+兩者的安全鏈為：破解密碼 $\Leftrightarrow$ 解 BDD on ideal lattice $\Leftarrow$ ideal-SVP$_\gamma$ 困難。
 
 \textbf{開放問題。}
-\begin{itemize}\setlength{\itemsep}{1pt}
-  \item \textbf{Ideal-SVP vs.\ SVP}：理想格（ideal lattice）上的 SVP 是否比任意格更易？
-    目前最佳結果（Cramer et al.\ 2016, Ducas--Nguyen 2012）顯示量子演算法可對特定理想格
-    加速，但一般情形仍未有突破。
-  \item \textbf{量子困難性下界}：格問題（SVP/CVP）的量子複雜度下界是否可達
-    $2^{\Omega(n)}$？目前尚無無條件下界。
-  \item \textbf{Hardness in the ring setting}：Ring-LWE 之最壞情形歸約目前依賴
-    特定分圓域的結構；對任意數環是否仍成立為開放問題。
+\begin{itemize}
+  \item \textbf{Ideal-SVP vs SVP}：理想格的 SVP 是否真的不比任意格容易？
+    Cramer et al.（2016）對特定分圓環給出量子加速，但一般情形仍開放；
+    若 Ideal-SVP 易解，則 Ring-LWE 安全保證將弱化。
+  \item \textbf{非分圓域的 Ring-LWE}：
+    LPR（2010）的歸約依賴分圓域的交換 Galois 結構；
+    對 Galois 閉包為非交換群的數環，安全歸約是否成立仍未知。
+  \item \textbf{古典 worst-case 歸約}：
+    Regev 的 LWE 歸約為量子的；
+    純古典 worst-case $\to$ average-case 歸約至今未找到。
+  \item \textbf{SVP 量子下界}：
+    最佳量子演算法為 $2^{0.265n}$（Laarhoven 2015），
+    但無條件指數下界至今未被證明。
 \end{itemize}
 
-\vspace{10pt}
+\vspace{4pt}
 \noindent\rule{\linewidth}{0.4pt}
-\begin{center}
-  \small\color{gray}
-  主要參考文獻：O.\ Regev, \textit{J.\ ACM} \textbf{56}(6), 2009.\quad
-  Lyubashevsky--Peikert--Regev, \textit{J.\ ACM} \textbf{60}(6), 2013.\quad
-  L.\ Babai, \textit{Combinatorica} \textbf{6}(1), 1986.\quad
-  C.\ Peikert, \textit{Found.\ Trends TCS} \textbf{10}(4), 2016.\quad
+\begin{center}\small\color{gray}
+  O.\ Regev, \textit{J.\ ACM} \textbf{56}(6), 2009.\;
+  V.\ Lyubashevsky--C.\ Peikert--O.\ Regev, \textit{J.\ ACM} \textbf{60}(6), 2013.\\[1pt]
+  H.\ Minkowski, \textit{Geometrie der Zahlen}, 1896.\;
+  H.\ Blichfeldt, \textit{Trans.\ AMS} \textbf{15}(3), 1914.\\[1pt]
+  J.\ Neukirch, \textit{Algebraic Number Theory}, Springer, 1999.\;
   NIST FIPS 203/204, 2024.
 \end{center}
 
