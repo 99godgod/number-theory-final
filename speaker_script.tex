@@ -1,0 +1,360 @@
+%!TEX program = xelatex
+% 口語報告提示稿（中英對照）— 對應 presentation.pdf 之 20 頁，約 40 分鐘
+\documentclass[10.5pt, a4paper]{article}
+
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{tcolorbox}
+
+\geometry{top=1.6cm, bottom=1.6cm, left=2.0cm, right=2.0cm}
+\setlength{\headheight}{14pt}
+
+\setCJKmainfont{Microsoft JhengHei}
+\setmainfont{Times New Roman}
+
+\definecolor{accent}{RGB}{30, 80, 160}
+\definecolor{zhfill}{RGB}{237, 246, 255}
+\definecolor{enfill}{RGB}{238, 248, 240}
+\definecolor{engreen}{RGB}{40, 120, 70}
+\definecolor{timefill}{RGB}{232, 232, 232}
+
+\tcbuselibrary{breakable}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[L]{\small\color{gray} 口語報告提示稿（中英對照）}
+\fancyhead[R]{\small\color{gray} 黃崇晉 | L16141149 | 數論（一）2026}
+\fancyfoot[C]{\small\thepage}
+
+\titleformat{\section}[block]
+  {\normalsize\bfseries\color{accent}}{}
+  {0pt}{}
+  [\vspace{1pt}\titlerule\vspace{3pt}]
+
+\setstretch{1.18}
+\setlength{\parskip}{2.0pt}
+\setlength{\parindent}{0pt}
+
+\newcommand{\timetag}[1]{\hfill\colorbox{timefill}{\small\color{gray}\textbf{#1}}}
+
+% 投影片標題列
+\newcommand{\slide}[2]{%
+  \vspace{2pt}%
+  \noindent{\small\bfseries\color{accent} ◆ 第 #1 頁\;|\;#2}\par\vspace{1pt}%
+}
+
+% 中文口語框
+\newenvironment{zh}{%
+  \begin{tcolorbox}[colback=zhfill, colframe=accent!45, breakable,
+    left=5pt, right=5pt, top=2.5pt, bottom=2.5pt, boxrule=0.4pt,
+    title={\footnotesize\bfseries 中文口語}, fonttitle=\color{white},
+    coltitle=white, colbacktitle=accent]\small
+}{\end{tcolorbox}\vspace{-1pt}}
+
+% 英文口語框
+\newenvironment{en}{%
+  \begin{tcolorbox}[colback=enfill, colframe=engreen!45, breakable,
+    left=5pt, right=5pt, top=2.5pt, bottom=2.5pt, boxrule=0.4pt,
+    title={\footnotesize\bfseries English Script}, fonttitle=\color{white},
+    coltitle=white, colbacktitle=engreen]\small\itshape
+}{\end{tcolorbox}\vspace{1pt}}
+
+\begin{document}
+
+% ── Title ─────────────────────────────────────────────────────────────
+\begin{center}
+  {\LARGE\bfseries\color{accent} LWE 與 Ring-LWE — 口語報告提示稿}\\[2pt]
+  {\large\bfseries Bilingual Speaker Script（中英對照，對應 presentation.pdf 20 頁）}\\[1pt]
+  {\small\itshape\color{accent} 理想格密碼學的數論結構 · 約 40 分鐘}\\[5pt]
+  \rule{\linewidth}{0.8pt}\\[2pt]
+  {\small 黃崇晉（Chung-Chin Huang）\;|\; L16141149 \;|\; 數論（一）\;|\; 2026 春季，國立成功大學}
+\end{center}
+
+{\small\color{gray}\itshape 使用說明：左欄頁碼對應投影片；中文框與英文框內容平行，可擇一語言通講，或中英穿插。框內方括號 [\,] 為語氣／停頓提示。}
+
+%% ══════════════════════════════════════════════════════════════════════
+\section{開場與大綱 \timetag{約 1.5 分鐘}}
+
+\slide{1}{封面 — LWE 與 Ring-LWE}
+\begin{zh}
+各位老師、同學好。本報告題目為「LWE 與 Ring-LWE：理想格密碼學的數論結構」。
+整場報告的主線是一條轉換路徑：從\textbf{幾何數論}出發，經過\textbf{分圓域與理想格}，
+進入今天的重點\textbf{LWE 與 Ring-LWE}，最後談\textbf{後量子標準}。
+核心問題只有一個——當量子電腦能破解 RSA 與橢圓曲線後，密碼學該建立在什麼數學困難之上？答案是「格」。
+\end{zh}
+\begin{en}
+Good [morning / afternoon], everyone. The title of this talk is ``LWE and Ring-LWE: the number-theoretic structure of ideal-lattice cryptography.''
+The storyline is a single chain: starting from the \emph{geometry of numbers}, passing through \emph{cyclotomic fields and ideal lattices}, into today's focus, \emph{LWE and Ring-LWE}, and ending with the \emph{post-quantum standards}.
+There is one central question: once quantum computers break RSA and elliptic curves, on what mathematical hardness should cryptography stand? The answer is: lattices.
+\end{en}
+
+\slide{2}{報告大綱與時間配置}
+\begin{zh}
+報告分四部分。Part~0 用約十分鐘快速鋪陳六個預備概念，每個概念一頁。
+Part~1 與 Part~2 是重點，分別講 LWE 與 Ring-LWE，約佔二十五分鐘。
+最後 Part~3 用五分鐘談應用與開放問題。重點會放在「為什麼需要 Ring-LWE」以及「環結構如何同時帶來效率與爭議」。
+\end{zh}
+\begin{en}
+The talk has four parts. Part~0 spends about ten minutes laying out six preliminary concepts, one slide each.
+Parts~1 and~2 are the core—LWE and then Ring-LWE—taking about twenty-five minutes.
+Finally, Part~3 spends five minutes on applications and open problems. The emphasis is on \emph{why} Ring-LWE is needed, and how its ring structure brings both efficiency and controversy.
+\end{en}
+
+%% ══════════════════════════════════════════════════════════════════════
+\section{Part 0 — 預備概念 \timetag{約 10 分鐘 · 六頁各約 1.5 分鐘}}
+
+\slide{3}{格（Lattice）}
+\begin{zh}
+首先是格的定義。取 $\mathbb{R}^n$ 中 $n$ 個線性獨立向量，它們的\textbf{整數}線性組合就構成一個秩 $n$ 的格。
+請注意關鍵字是「整數」係數，這讓格成為離散的點陣。基底矩陣行列式的絕對值稱為覆積，等於基本域的體積，且與選哪組基底無關。
+最重要的直覺是：同一個格有無窮多組基底，有「好基底」（又短又接近正交）也有「壞基底」——這個落差正是之後所有困難問題的來源。
+\end{zh}
+\begin{en}
+We begin with the definition of a lattice. Take $n$ linearly independent vectors in $\mathbb{R}^n$; their \emph{integer} linear combinations form a rank-$n$ lattice.
+The keyword is ``integer'' coefficients, which makes the lattice a discrete grid of points. The absolute value of the basis determinant is the covolume, equal to the volume of the fundamental domain, and it is independent of the chosen basis.
+The key intuition: one lattice has infinitely many bases—``good'' ones (short, nearly orthogonal) and ``bad'' ones. That gap is exactly the source of every hard problem to come.
+\end{en}
+
+\slide{4}{Minkowski 第一定理（1896）}
+\begin{zh}
+接下來是 Minkowski 第一定理。對一個中心對稱凸體，只要它的體積超過 $2^n$ 乘上覆積，就必定包含一個非零格點。
+證明的構想是對二分之一的 $S$ 套用 Blichfeldt 鴿巢論證，逼出兩個平移拷貝重疊，再用對稱與凸性把差向量拉回 $S$。
+這裡最該強調的是「非構造性」三個字：定理只保證短向量\textbf{存在}，卻完全不告訴我們怎麼找到它。這個「存在但難尋」的落差，就是 SVP 困難性的幾何根源。
+\end{zh}
+\begin{en}
+Next is Minkowski's first theorem. For a centrally symmetric convex body, as soon as its volume exceeds $2^n$ times the covolume, it must contain a nonzero lattice point.
+The proof idea: apply Blichfeldt's pigeonhole argument to one-half of $S$, force two translated copies to overlap, then use symmetry and convexity to pull the difference vector back into $S$.
+What to stress is the word \emph{non-constructive}: the theorem guarantees a short vector \emph{exists}, but says nothing about how to find it. That gap—``exists but hard to locate''—is the geometric root of the hardness of SVP.
+\end{en}
+
+\slide{5}{分圓域（Cyclotomic Field）}
+\begin{zh}
+現在把場景換到數論。本報告固定取 $n$ 為 $2$ 的冪，這時第 $2n$ 個分圓多項式恰好是 $x^n+1$，在有理數上不可約。
+對應的整數環是 Dedekind 整環，保證每個理想都有唯一的質理想分解——這是後面所有結構的基礎。
+透過標準嵌入，把數域中的元素送進 $\mathbb{C}^n$，而且環的乘法剛好對應到逐分量乘法。
+選 $x^n+1$ 的三個理由：不可約性最乾淨、$x^n$ 同餘於 $-1$ 帶來負循環卷積、最有利於後面的 NTT。
+\end{zh}
+\begin{en}
+Now we move to number theory. Throughout, we take $n$ to be a power of two; then the $2n$-th cyclotomic polynomial is exactly $x^n+1$, irreducible over the rationals.
+Its ring of integers is a Dedekind domain, which guarantees unique factorization of every ideal into prime ideals—the foundation for everything that follows.
+Through the canonical embedding, elements of the field map into $\mathbb{C}^n$, and ring multiplication corresponds to component-wise multiplication.
+Three reasons for choosing $x^n+1$: cleanest irreducibility, the relation $x^n \equiv -1$ giving negacyclic convolution, and maximal friendliness to the NTT later on.
+\end{en}
+
+\slide{6}{理想格結構（Ideal Lattice）}
+\begin{zh}
+這一頁是整場報告的橋樑。透過標準嵌入，數域中的每個理想都對應到一個格，稱為理想格。
+最關鍵的公式是：理想格的覆積等於理想範數乘上根號判別式。換句話說，\textbf{算術上的「理想範數」被精確翻譯成幾何上的「格體積」}。
+理想格其實只是一般格的特例，但多了環的乘法結構。這個額外結構是一把雙面刃：它是 Ring-LWE 效率提升的根源，同時也是安全爭議的來源——因為理想格可能比一般格更容易攻擊。
+\end{zh}
+\begin{en}
+This slide is the bridge of the whole talk. Via the canonical embedding, every ideal in the number field maps to a lattice, called an ideal lattice.
+The key formula: the covolume of an ideal lattice equals the ideal norm times the square root of the discriminant. In other words, the arithmetic ``ideal norm'' is translated precisely into the geometric ``lattice volume.''
+An ideal lattice is just a special case of a general lattice, but with extra ring-multiplication structure. That extra structure is double-edged: it is the source of Ring-LWE's efficiency, and also the source of security concerns—because ideal lattices might be easier to attack than arbitrary ones.
+\end{en}
+
+\slide{7}{最短向量問題 SVP}
+\begin{zh}
+有了格，就能定義第一個核心難題：最短向量問題。給定一組\textbf{壞}基底，要找出最短的非零格點，或它的長度。
+這個問題是 NP-hard，目前最佳演算法是指數時間 $2^{\Theta(n)}$；即使用量子電腦，最佳也只是 $2^{0.265n}$，仍是指數級。
+這就是為什麼格密碼被認為能抵抗量子攻擊。記住一句話：LWE 與 Ring-LWE 的安全性，最終都歸約到最壞情況下的 SVP。
+\end{zh}
+\begin{en}
+With lattices in place, we can define the first core hard problem: the Shortest Vector Problem. Given a \emph{bad} basis, find the shortest nonzero lattice vector, or its length.
+This problem is NP-hard; the best algorithms run in exponential time $2^{\Theta(n)}$. Even on a quantum computer, the best is $2^{0.265n}$—still exponential.
+That is precisely why lattice cryptography is believed to resist quantum attacks. Keep one sentence in mind: the security of LWE and Ring-LWE ultimately reduces to worst-case SVP.
+\end{en}
+
+\slide{8}{最近向量問題 CVP}
+\begin{zh}
+第二個難題是最近向量問題：給定一個不一定在格上的目標點，要找離它最近的格點。CVP 一般比 SVP 更難。
+其中有個特例叫 BDD，有界距離解碼——已知目標點離某個格點\textbf{非常近}，要把那個格點還原出來，而且解是唯一的。
+請特別記住這一頁的最後一句：\textbf{LWE 的本質就是 BDD}。等一下會看到，LWE 樣本裡的 $As$ 是格點、誤差 $e$ 是微小偏移，還原秘密 $s$ 就等於在格上解 BDD。
+\end{zh}
+\begin{en}
+The second hard problem is the Closest Vector Problem: given a target point not necessarily on the lattice, find the nearest lattice point. CVP is generally harder than SVP.
+A special case is BDD, Bounded Distance Decoding: the target is known to be \emph{very close} to some lattice point, and we must recover that point—with a unique solution.
+Remember the last line of this slide: \emph{LWE is essentially BDD}. We will soon see that in an LWE sample, $As$ is the lattice point, the error $e$ is a tiny offset, and recovering the secret $s$ is exactly solving BDD on a lattice.
+\end{en}
+
+%% ══════════════════════════════════════════════════════════════════════
+\section{Part 1 — LWE（重點）\timetag{約 12 分鐘}}
+
+\slide{9}{LWE：問題設定（Regev 2005）}
+\begin{zh}
+進入重點。LWE，Learning With Errors，由 Regev 在 2005 年提出。設定是：固定維度 $n$、模數 $q$、一個窄的高斯誤差分布。
+秘密是一個向量 $s$。每筆樣本隨機取一個向量 $a$，計算 $a$ 與 $s$ 的內積，再\textbf{加上一個微小誤差} $e$，模 $q$ 後輸出。
+關鍵直覺在這裡：如果\textbf{沒有}誤差，只要收集 $n$ 條方程，用高斯消去法就能解出 $s$。但一旦加入微小誤差，線性代數整個失效——這就是困難的來源。誤差必須恰到好處：小到能正確解密、大到足以保證安全。
+\end{zh}
+\begin{en}
+Now the core. LWE—Learning With Errors—was introduced by Regev in 2005. The setup fixes a dimension $n$, a modulus $q$, and a narrow Gaussian error distribution.
+The secret is a vector $s$. Each sample draws a random vector $a$, computes the inner product of $a$ and $s$, then \emph{adds a tiny error} $e$, and outputs the result modulo $q$.
+Here is the key intuition: \emph{without} the error, collecting $n$ equations and running Gaussian elimination recovers $s$ immediately. But once a tiny error is added, linear algebra breaks down entirely—that is the source of hardness. The error must be just right: small enough for correct decryption, large enough for security.
+\end{en}
+
+\slide{10}{LWE：判定版本與搜尋版本}
+\begin{zh}
+LWE 有兩個版本。搜尋版：給很多筆樣本，把秘密 $s$ 解出來。判定版：要區分「真正的 LWE 樣本」和「完全均勻的隨機串」。
+這兩個版本在質數 $q$ 時是多項式時間等價的，Regev 給出了 search-to-decision 的歸約。
+為什麼加密用判定版？因為判定版的困難，直接保證\textbf{密文看起來和隨機串無法區分}，這就是語意安全 IND-CPA。
+舉 Regev 加密為例：公鑰就是 $A$ 和 $b$，加密一個位元時取若干筆樣本求和，並把訊息藏在 $q$ 的一半這個位置；解密時看內積靠近 $0$ 還是 $q/2$。
+\end{zh}
+\begin{en}
+LWE comes in two versions. Search: given many samples, recover the secret $s$. Decision: distinguish ``genuine LWE samples'' from ``uniformly random strings.''
+For prime $q$ the two are polynomial-time equivalent; Regev gave the search-to-decision reduction.
+Why does encryption use the decision version? Because its hardness directly guarantees that \emph{ciphertexts are indistinguishable from random}—that is semantic security, IND-CPA.
+Take Regev encryption as an example: the public key is $A$ and $b$; to encrypt a bit, sum a subset of samples and hide the message near $q/2$; to decrypt, check whether the inner product is close to $0$ or to $q/2$.
+\end{en}
+
+\slide{11}{LWE：與格的連結與安全歸約}
+\begin{zh}
+現在把 LWE 翻譯成格的語言。考慮 $q$-ary 格，也就是所有形如 $As$ 模 $q$ 的點所成的格。
+那麼 $b = As + e$ 就是一個\textbf{靠近格點 $As$ 的目標點}，誤差 $e$ 正好是那個小偏移。所以還原 $s$，就等於在這個格上解 BDD，呼應前面 CVP 那一頁。
+更重要的是 Regev 的量子歸約：他證明了「破解平均情況的 LWE」可以推出「解最壞情況的 GapSVP 或 SIVP」。
+這句話的份量在於——安全性不是建立在某些隨機實例上，而是建立在\textbf{最難的格實例}上。Peikert 在 2009 年補上了針對 GapSVP、大 $q$ 的古典歸約。
+\end{zh}
+\begin{en}
+Now translate LWE into lattice language. Consider the $q$-ary lattice—the lattice of all points of the form $As$ modulo $q$.
+Then $b = As + e$ is a \emph{target close to the lattice point $As$}, with the error $e$ as the small offset. So recovering $s$ is solving BDD on this lattice—echoing the CVP slide.
+More importantly, Regev's quantum reduction proves that ``breaking average-case LWE'' implies ``solving worst-case GapSVP or SIVP.''
+The weight of this statement: security rests not on some random instances, but on the \emph{hardest} lattice instances. Peikert in 2009 added a classical reduction for GapSVP with large $q$.
+\end{en}
+
+\slide{12}{LWE：困難性與效率瓶頸}
+\begin{zh}
+LWE 的優點是安全歸約乾淨、不需要任何額外的代數結構假設，所以它是最保守、最讓人放心的格密碼基礎。
+但它有一個致命的效率瓶頸：公鑰是一個 $m$ 乘 $n$ 的矩陣，大小是 $n$ 平方等級；每次運算是一般的矩陣向量乘，也是 $n$ 平方。實用安全要求 $n$ 大約上千，金鑰動輒好幾 MB，難以部署。
+於是核心問題浮現：能不能在\textbf{不犧牲安全歸約}的前提下，把 $n$ 平方降到接近線性？答案是給秘密和樣本「環結構」——一個環元素就能一次提供 $n$ 條方程。這就引出 Ring-LWE。
+\end{zh}
+\begin{en}
+LWE's advantage is a clean security reduction with no extra algebraic assumptions, making it the most conservative and reassuring foundation for lattice cryptography.
+But it has a fatal efficiency bottleneck: the public key is an $m$-by-$n$ matrix, of size order $n$ squared; each operation is a generic matrix-vector product, also $n$ squared. Practical security needs $n$ around a thousand, so keys reach several megabytes—hard to deploy.
+Hence the central question: can we cut $n$ squared down to nearly linear \emph{without} sacrificing the security reduction? The answer is to give the secret and samples a ``ring structure''—a single ring element provides $n$ equations at once. This leads us to Ring-LWE.
+\end{en}
+
+%% ══════════════════════════════════════════════════════════════════════
+\section{Part 2 — Ring-LWE（重點）\timetag{約 13 分鐘}}
+
+\slide{13}{Ring-LWE：分圓環設定（LPR 2010）}
+\begin{zh}
+Ring-LWE 由 Lyubashevsky、Peikert、Regev 在 2010 年提出。把 LWE 的整個場景搬進分圓環裡。
+對照來看：原本的向量空間 $\mathbb{Z}_q^n$ 換成環 $R_q$；原本的內積換成\textbf{環乘法}，也就是負循環卷積。
+樣本變成：隨機取一個環元素 $a$，輸出 $a$ 乘 $s$ 再加誤差 $e$。妙處在於：單一個 $a$ 有 $n$ 個係數，它一次就攜帶了 $n$ 條方程，所以金鑰從 $n$ 平方掉到 $n$。
+代價是安全性現在歸約到\textbf{理想格}上的 SVP，而不是任意格。接下來三頁說明環結構如何讓運算加速、又如何讓歸約成立。
+\end{zh}
+\begin{en}
+Ring-LWE was introduced by Lyubashevsky, Peikert, and Regev in 2010. It moves the entire LWE setting into a cyclotomic ring.
+By analogy: the vector space $\mathbb{Z}_q^n$ becomes the ring $R_q$; the inner product becomes \emph{ring multiplication}, i.e.\ negacyclic convolution.
+A sample becomes: draw a random ring element $a$, output $a$ times $s$ plus error $e$. The beauty: a single $a$ has $n$ coefficients, so it carries $n$ equations at once, and the key drops from $n$ squared to $n$.
+The price is that security now reduces to SVP on \emph{ideal} lattices, not arbitrary ones. The next three slides show how the ring structure speeds up computation and makes the reduction work.
+\end{en}
+
+\slide{14}{Ring-LWE：質理想分解與 $R_q \cong \mathbb{F}_q^n$}
+\begin{zh}
+要讓乘法變快，先看 $q$ 在環裡怎麼分解。對不整除 $2n$ 的質數 $q$，$q$ 的分解完全由 $x^n+1$ 模 $q$ 的因式分解決定。
+最理想的情況是\textbf{完全分裂}，它發生的充要條件非常漂亮：$q$ 同餘於 $1$ 模 $2n$。
+這時 $x^n+1$ 在模 $q$ 下裂成 $n$ 個相異的一次因式，由中國剩餘定理，整個環 $R_q$ 同構於 $n$ 份 $\mathbb{F}_q$ 的直積，也就是 $\mathbb{F}_q^n$。
+這個同構把「多項式乘法」變成「逐分量乘法」——這正是下一頁 NTT 的代數根源。所以實作上參數永遠選 $q$ 同餘 $1$ 模 $2n$。
+\end{zh}
+\begin{en}
+To make multiplication fast, first see how $q$ factors in the ring. For a prime $q$ not dividing $2n$, the factorization of $q$ is fully determined by the factorization of $x^n+1$ modulo $q$.
+The ideal case is \emph{complete splitting}, and its necessary-and-sufficient condition is beautifully simple: $q$ congruent to $1$ modulo $2n$.
+Then $x^n+1$ splits modulo $q$ into $n$ distinct linear factors, and by the Chinese Remainder Theorem the whole ring $R_q$ is isomorphic to a product of $n$ copies of $\mathbb{F}_q$, that is $\mathbb{F}_q^n$.
+This isomorphism turns ``polynomial multiplication'' into ``component-wise multiplication''—the algebraic root of the NTT on the next slide. So in practice the parameter is always chosen with $q$ congruent to $1$ modulo $2n$.
+\end{en}
+
+\slide{15}{Ring-LWE：NTT — $O(n\log n)$ 的環乘法}
+\begin{zh}
+數論變換 NTT，就是上一頁那個求值同構的演算法化。把多項式 $a$ 送到它在 $n$ 個單位根上的取值，乘法就變成逐分量相乘，乘完再用反變換插值回來。
+直接算多項式乘法要 $n$ 平方；但用 Cooley-Tukey 蝴蝶運算，依奇偶指標遞迴拆解，配合 $\omega^n = -1$ 這個負循環性質，遞迴式解出來是 $n \log n$。
+這就是 Ring-LWE 效率的引擎。也正因為 $x^n+1$ 給出 $x^n \equiv -1$，乘法是\textbf{負循環卷積}——超過次數 $n$ 的項繞回來時要變號。選 $2$ 的冪分圓環，就是為了讓這個運算最乾淨。
+\end{zh}
+\begin{en}
+The Number-Theoretic Transform, NTT, is the algorithmic form of that evaluation isomorphism. Send a polynomial $a$ to its values at the $n$ roots of unity; multiplication becomes component-wise, then an inverse transform interpolates back.
+Direct polynomial multiplication costs $n$ squared; but the Cooley--Tukey butterfly recursively splits by parity of indices, and with the negacyclic property $\omega^n = -1$, the recurrence solves to $n \log n$.
+This is the engine of Ring-LWE's efficiency. And precisely because $x^n+1$ gives $x^n \equiv -1$, multiplication is \emph{negacyclic convolution}—terms wrapping past degree $n$ flip sign. Choosing a power-of-two cyclotomic ring keeps this operation cleanest.
+\end{en}
+
+\slide{16}{Ring-LWE：對偶格與誤差的自然定義域}
+\begin{zh}
+這一頁比較技術，但對安全歸約的嚴密性很關鍵。先算差異理想：它由分圓多項式的導數生成，在這裡剛好等於主理想 $(n)$。
+在跡配對的意義下，整數環的對偶格就是\textbf{逆差理想}，這裡恰好等於 $n$ 分之一倍的整數環。驗證的關鍵是 $\zeta$ 的次方的跡：只有零次方的跡是 $n$，其餘都是零。
+密碼學上的意義是：嚴格的 Ring-LWE，誤差不是定義在 $R_q$ 上，而是定義在對偶格上。唯有用對偶格，誤差分布在跡配對下才有\textbf{代數不變性}，安全歸約才會嚴密。在 $2$ 的冪分圓環裡，這個修正只是個 $n$ 分之一的縮放，實作很簡單。
+\end{zh}
+\begin{en}
+This slide is more technical but crucial for the rigor of the reduction. First compute the different ideal: generated by the derivative of the cyclotomic polynomial, here equal to the principal ideal $(n)$.
+Under the trace pairing, the dual lattice of the ring of integers is the \emph{codifferent}, which here equals one-over-$n$ times the ring of integers. The key to verifying is the trace of powers of $\zeta$: only the zeroth power has trace $n$, all others are zero.
+The cryptographic meaning: in rigorous Ring-LWE, the error lives not on $R_q$ but on the dual lattice. Only with the dual lattice does the error distribution gain \emph{algebraic invariance} under the trace pairing, making the reduction tight. In a power-of-two cyclotomic ring this correction is just a one-over-$n$ scaling—easy to implement.
+\end{en}
+
+\slide{17}{Ring-LWE：歸約鏈與 LWE 對照（小結）}
+\begin{zh}
+Part~2 小結。安全歸約鏈是：最壞情況的 ideal-SVP，量子多項式時間歸約到平均情況的 Ring-LWE，再推出破解 Kyber、Dilithium 的困難。
+看這張對照表：LWE 金鑰 $n$ 平方、乘法 $n$ 平方、建立在任意格上；Ring-LWE 金鑰只要 $n$、乘法 $n \log n$、建立在理想格上。
+一句話總結：分圓環、CRT、NTT、對偶格這一整套代數結構，讓 Ring-LWE 在維持與 LWE 相近的安全保證下，把成本從 $n$ 平方壓到 $n \log n$。代價就是多了一個「理想格」的假設——這正是最後開放問題的核心。
+\end{zh}
+\begin{en}
+Summary of Part~2. The reduction chain is: worst-case ideal-SVP reduces, in quantum polynomial time, to average-case Ring-LWE, which implies the hardness of breaking Kyber and Dilithium.
+Look at the comparison table: LWE has key size $n$ squared, multiplication $n$ squared, based on arbitrary lattices; Ring-LWE has key size only $n$, multiplication $n \log n$, based on ideal lattices.
+In one sentence: the whole algebraic toolkit—cyclotomic ring, CRT, NTT, dual lattice—lets Ring-LWE keep security comparable to LWE while cutting cost from $n$ squared to $n \log n$. The price is one extra ``ideal-lattice'' assumption—which is exactly the heart of the final open problems.
+\end{en}
+
+%% ══════════════════════════════════════════════════════════════════════
+\section{Part 3 — 應用與開放問題 \timetag{約 5 分鐘}}
+
+\slide{18}{應用：NIST 後量子標準（2024.08）}
+\begin{zh}
+談應用。2024 年 8 月，NIST 正式發布後量子標準，其中兩個都建立在格上。
+FIPS~203，也就是 Kyber，做金鑰封裝，基礎是 Module-LWE——它是 Ring-LWE 在小矩陣上的推廣。Kyber-512 取 $n=256$、$q=3329$，攻擊難度約 $2$ 的 $118$ 次方。
+FIPS~204，Dilithium，做數位簽章，基礎是 Module-LWE 加 Module-SIS。
+為什麼用 Module 而不純用 Ring？因為 Module-LWE 是個折衷：用一個小矩陣，介於最快但結構最多的 Ring-LWE，和最保守的 LWE 之間，既降低結構風險、又還能用 NTT 加速。整條安全鏈是：破解密碼等價於解理想格上的 BDD，而它又被 ideal-SVP 的困難所保證。
+\end{zh}
+\begin{en}
+On applications. In August 2024, NIST released its post-quantum standards, two of which are lattice-based.
+FIPS~203, Kyber, does key encapsulation, based on Module-LWE—a generalization of Ring-LWE over small matrices. Kyber-512 uses $n=256$, $q=3329$, with attack hardness about $2$ to the $118$.
+FIPS~204, Dilithium, does digital signatures, based on Module-LWE plus Module-SIS.
+Why Module rather than pure Ring? Because Module-LWE is a compromise: using a small matrix, it sits between the fastest, most-structured Ring-LWE and the most conservative LWE—reducing structural risk while still allowing NTT acceleration. The full security chain: breaking the cipher is equivalent to solving BDD on an ideal lattice, which in turn is guaranteed by the hardness of ideal-SVP.
+\end{en}
+
+\slide{19}{開放問題}
+\begin{zh}
+最後是四個開放問題。第一，也是最重要的：理想格上的 SVP，是否真的不比一般格容易？Cramer 等人在 2016 年對某些分圓環給出了量子加速。如果哪天 ideal-SVP 被證明容易，Ring-LWE 的安全保證就會被削弱。
+第二，非分圓域的 Ring-LWE：現有歸約依賴分圓域的交換 Galois 結構，換成非交換的情況還不知道行不行。
+第三，古典歸約：Regev 的歸約是量子的，純古典的最壞到平均歸約至今沒找到。
+第四，量子下界：目前最好的量子演算法是 $2$ 的 $0.265n$ 次方，但無條件的指數下界一直沒被證明。這些都是目前活躍的研究前沿。
+\end{zh}
+\begin{en}
+Finally, four open problems. First, and most important: is SVP on ideal lattices truly no easier than on general lattices? Cramer et al.\ in 2016 gave a quantum speedup for certain cyclotomic rings. If ideal-SVP is ever shown to be easy, Ring-LWE's security guarantee weakens.
+Second, Ring-LWE over non-cyclotomic fields: existing reductions rely on the abelian Galois structure of cyclotomic fields; whether they extend to non-abelian cases is unknown.
+Third, classical reductions: Regev's reduction is quantum, and a purely classical worst-case-to-average-case reduction has not been found.
+Fourth, quantum lower bounds: the best quantum algorithm is $2$ to the $0.265n$, yet an unconditional exponential lower bound remains unproven. These are all active research frontiers.
+\end{en}
+
+\slide{20}{結尾與致謝}
+\begin{zh}
+總結整場報告：從格與 Minkowski 定理的幾何直覺出發，看到分圓域如何把理想變成理想格；再進入 LWE 與它的 BDD 本質，最後看 Ring-LWE 如何用環結構把效率推到實用等級，並成為今天 NIST 標準的數學基礎。
+核心訊息只有一句：\textbf{格上「存在但難尋」的短向量，撐起了整個後量子密碼學}。感謝聆聽，歡迎提問。
+\end{zh}
+\begin{en}
+To wrap up: starting from the geometric intuition of lattices and Minkowski's theorem, we saw how cyclotomic fields turn ideals into ideal lattices; then we entered LWE and its BDD essence; and finally how Ring-LWE uses ring structure to push efficiency to practical levels, becoming the mathematical foundation of today's NIST standards.
+The core message is one sentence: \emph{the ``exists-but-hard-to-find'' short vector of a lattice supports the whole of post-quantum cryptography}. Thank you for listening; I welcome your questions.
+\end{en}
+
+\vspace{4pt}
+\noindent\rule{\linewidth}{0.4pt}
+\begin{center}\small\color{gray}
+  對應投影片：presentation.pdf（20 頁）\quad|\quad 時間：Part 0 \textasciitilde10 分 + Part 1\,/\,2 \textasciitilde25 分 + Part 3 \textasciitilde5 分 $\approx$ \textbf{40 分鐘}\\[2pt]
+  O.\ Regev, \textit{J.\ ACM} \textbf{56}(6), 2009.\;
+  V.\ Lyubashevsky--C.\ Peikert--O.\ Regev, \textit{J.\ ACM} \textbf{60}(6), 2013.\;
+  H.\ Minkowski, 1896.\; J.\ Neukirch, Springer, 1999.\; NIST FIPS 203/204, 2024.
+\end{center}
+
+\end{document}

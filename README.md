@@ -9,15 +9,19 @@
 | 檔案 | 說明 |
 |---|---|
 | `summary.pdf` / `summary.tex` | 書面摘要（含 Minkowski 定理完整證明、分圓域與理想格、Ring-LWE 代數結構） |
+| `presentation.pdf` / `presentation.tex` | 投影片（beamer，20 頁，約 40 分鐘）：前置六頁簡介格／Minkowski／分圓域／理想格／SVP／CVP，重點在 LWE 與 Ring-LWE，末段 5 分鐘談應用與開放問題 |
+| `speaker_script.pdf` / `speaker_script.tex` | 口語報告提示稿（中英對照，7 頁），逐頁對應 `presentation.pdf` 全 20 頁 |
 | `report_script.pdf` / `.tex` | 口頭報告大綱（約 40 分鐘：格與 Minkowski 定理簡述 10 分鐘 + Ring-LWE 數論結構與其數學運算 30 分鐘） |
 | `ring_lwe_summary.pdf` / `ring_lwe_summary_zh.pdf` | 早期一頁式精簡大綱草稿（英文 / 中文對照版） |
 
 ## 編譯方式
 
-LaTeX 來源以 `xelatex` 編譯（需 xeCJK 與 Microsoft JhengHei 字型）：
+LaTeX 來源以 `xelatex` 編譯（需 xeCJK 與 Microsoft JhengHei 字型）；投影片與提示稿含頁碼／章節交叉參照，須各跑兩趟：
 ```bash
 xelatex summary.tex
 xelatex report_script.tex
+xelatex presentation.tex && xelatex presentation.tex
+xelatex speaker_script.tex && xelatex speaker_script.tex
 ```
 
 ---

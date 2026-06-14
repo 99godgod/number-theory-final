@@ -1,6 +1,6 @@
 # 下一台電腦完整使用步驟
 
-本文件記錄如何在新電腦 clone 並使用本 repo（含 LaTeX 編譯、Python 投影片生成、git 同步流程）。
+本文件記錄如何在新電腦 clone 並使用本 repo（含 LaTeX 編譯、git 同步流程）。
 
 ## Step 1:安裝 Git
 
@@ -48,22 +48,8 @@ git config --global user.email "99godgod@gmail.com"
 - **編譯指令**:
   ```bash
   xelatex summary.tex
-  xelatex presentation_script_v2.tex
+  xelatex report_script.tex
   ```
-
-### 要執行 `make_ppt_v2.py`
-- 安裝 Python 3.10+（https://www.python.org/downloads/）
-- 安裝套件:
-  ```bash
-  pip install python-pptx
-  ```
-- 執行:
-  ```bash
-  python make_ppt_v2.py
-  ```
-
-### 要編輯 `.pptx`
-- PowerPoint、Keynote、或 LibreOffice Impress
 
 ## Step 5:日常使用流程
 
@@ -91,7 +77,7 @@ git diff <檔名>         # 看某檔案改了什麼
 
 原本那台若要拿到另一台改過的內容:
 ```bash
-cd "D:/成大碩士班/114-2/數論（一）/期末報告"
+cd "D:/成大碩士班/114-2/數論（一）/number-theory-final"
 git pull
 ```
 
