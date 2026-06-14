@@ -36,11 +36,11 @@ $$\mathcal{L} = \sum_{i=1}^{n} \mathbb{Z}\, b_i \subset \mathbb{R}^n$$
 
 **Blichfeldt 引理（1914）**：設 $\mathcal{L}\subset\mathbb{R}^n$ 為格，$S\subset\mathbb{R}^n$ 為 Lebesgue 可測集。若 $\mathrm{vol}(S)>\det(\mathcal{L})$，則存在相異 $x,y\in S$ 使得 $x-y\in\mathcal{L}$。
 
-> 證明：令 $\mathcal{F}$ 為 $\mathcal{L}$ 的基本域，對 $\{S_v := S\cap(v+\mathcal{F})\}_{v\in\mathcal{L}}$ 做平移後，$\sum\mathrm{vol}(S_v') = \mathrm{vol}(S) > \mathrm{vol}(\mathcal{F})$，由鴿巢原理得兩個平移片重疊，差向量即為所求。
+> 證明：令 $\mathcal{F}$ 為 $\mathcal{L}$ 的基本域，對 $\lbrace S_v := S\cap(v+\mathcal{F})\rbrace_{v\in\mathcal{L}}$ 做平移後，$\sum\mathrm{vol}(S_v') = \mathrm{vol}(S) > \mathrm{vol}(\mathcal{F})$，由鴿巢原理得兩個平移片重疊，差向量即為所求。
 
 **Minkowski 第一定理（1896）**：設 $S\subset\mathbb{R}^n$ 為中心對稱凸體。若 $\mathrm{vol}(S)>2^n\det(\mathcal{L})$，則 $S$ 包含至少一個非零格點。
 
-> 證明：對 $\tfrac{1}{2}S$ 套用 Blichfeldt 引理，利用中心對稱性與凸性知差向量 $p-q\in S\cap\mathcal{L}\setminus\{0\}$。
+> 證明：對 $\tfrac{1}{2}S$ 套用 Blichfeldt 引理，利用中心對稱性與凸性知差向量 $p-q\in S\cap\mathcal{L}\setminus\lbrace 0\rbrace$。
 
 **Minkowski 界（推論）**：設 $K$ 為次數 $n=r_1+2r_2$ 的數域，$\Delta_K$ 為判別式，則 $\mathrm{Cl}(K)$ 中每個理想類均含範數有界的整數理想：
 
@@ -68,7 +68,7 @@ $$\det\bigl(\sigma(\mathfrak{a})\bigr)=N(\mathfrak{a})\cdot\sqrt{|\Delta_K|}$$
 
 **差異理想與逆差理想**：$\mathfrak{D}_{K/\mathbb{Q}}=(n\zeta^{n-1})=(n)$（因 $\zeta^{n-1}$ 為單位元），逆差理想為
 
-$$\mathfrak{D}^{-1}=\bigl\{x\in K:\mathrm{Tr}_{K/\mathbb{Q}}(x\,\mathcal{O}_K)\subset\mathbb{Z}\bigr\}=\tfrac{1}{n}\mathcal{O}_K$$
+$$\mathfrak{D}^{-1}=\bigl\lbrace x\in K:\mathrm{Tr}_{K/\mathbb{Q}}(x\,\mathcal{O}_K)\subset\mathbb{Z}\bigr\rbrace=\tfrac{1}{n}\mathcal{O}_K$$
 
 $\mathfrak{D}^{-1}$ 是 $\mathcal{O}_K$ 在跡配對 $\langle a,b\rangle=\mathrm{Tr}(ab)$ 下的**對偶格**。
 
