@@ -1,0 +1,195 @@
+%!TEX program = xelatex
+% 外部資料節錄（繁中）— 僅取與本報告主題（理想格／分圓域／LWE／Ring-LWE）貼合之段落
+\documentclass[10.5pt, a4paper]{article}
+
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{tcolorbox}
+\usepackage{array}
+
+\geometry{top=1.6cm, bottom=1.6cm, left=1.9cm, right=1.9cm}
+\setlength{\headheight}{14pt}
+
+\setCJKmainfont{Microsoft JhengHei}
+\setmainfont{Times New Roman}
+
+\definecolor{accent}{RGB}{30, 80, 160}
+\definecolor{thmfill}{RGB}{237, 246, 255}
+\definecolor{mapfill}{RGB}{240, 248, 240}
+
+\tcbuselibrary{breakable}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[L]{\small\color{gray} 外部資料節錄 · 對應報告主題}
+\fancyhead[R]{\small\color{gray} 黃崇晉 · 數論（一）2026}
+\fancyfoot[C]{\small\thepage}
+
+\titleformat{\section}[block]
+  {\normalsize\bfseries\color{accent}}{\thesection\;}{0.4em}{}
+  [\vspace{1pt}\titlerule\vspace{3pt}]
+\titleformat{\subsection}[block]
+  {\small\bfseries\color{accent!80!black}}{\thesubsection\;}{0.4em}{}
+
+\setstretch{1.16}
+\setlength{\parskip}{2.0pt}
+\setlength{\parindent}{0pt}
+\setlength{\topsep}{2pt}\setlength{\partopsep}{0pt}
+\makeatletter
+\let\orig@itemize\itemize
+\renewcommand{\itemize}{\orig@itemize\setlength{\itemsep}{1pt}\setlength{\parsep}{0pt}}
+\makeatother
+
+\newtheoremstyle{cpt}{2pt}{2pt}{\normalfont}{0pt}{\bfseries\color{accent}}{.}{0.45em}{}
+\theoremstyle{cpt}
+\newtheorem{definition}{定義}
+
+% 對應報告章節的標示框
+\newenvironment{maps}[1]{%
+  \begin{tcolorbox}[colback=mapfill, colframe=accent!30, breakable,
+    left=5pt, right=5pt, top=2pt, bottom=2pt, boxrule=0.4pt,
+    title={\footnotesize\bfseries 對應報告：#1}, coltitle=white, colbacktitle=accent!70!black]\small
+}{\end{tcolorbox}\vspace{-1pt}}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\vol}{\mathrm{vol}}
+\newcommand{\rd}[1]{\lceil #1 \rfloor}
+
+\begin{document}
+
+\begin{center}
+  {\LARGE\bfseries\color{accent} 外部資料節錄：與報告主題貼合之段落}\\[2pt]
+  {\small\itshape\color{accent} Ring-LWE 與理想格密碼學 — 節錄、整理、繁中編輯}\\[4pt]
+  \rule{\linewidth}{0.8pt}
+\end{center}
+
+{\footnotesize\color{gray}
+\textbf{說明}：本檔僅\emph{節錄}兩份來源中與本報告（格與 Minkowski、分圓域與理想格、LWE／Ring-LWE 數論結構、應用與開放問題）直接相關的部分，並以繁體中文重新編輯、對應報告章節；
+已\textbf{略去}離題內容（FHE 方案族譜 BGV／BFV／GSW／TFHE／CKKS、bootstrapping、函式庫／編譯器／硬體生態、區塊鏈應用）。
+來源：(1) HackMD〈LWE \& Ring-LWE〉(sjng)；(2) Google Drive 49 頁講義〈格密碼到 FHE 綜述〉(lynndell2010／mutourend2010, 2025-01-25)。}
+
+%% ════════════════════════════════════════════════════════
+\section{格、基底品質與最短／最近向量問題}
+
+\begin{maps}{Section 1（格與 Minkowski）、SVP／CVP 兩頁}\end{maps}
+
+\begin{definition}[格與覆積]
+  $L=\{\sum_{i=1}^n a_i\mathbf{v}_i:a_i\in\Z\}\subset\R^m$，$\mathbf{v}_i$ 線性獨立。
+  覆積 $\det(L)=\vol(\mathcal{P}(\mathbf{V}))=\sqrt{\det(\mathbf{V}^T\mathbf{V})}$，與基底選擇無關。
+\end{definition}
+
+\textbf{好基底與壞基底}。同一格有無窮多組基底，以 \textbf{Hadamard 比率}量化品質：
+\[
+  \mathcal{H}(\mathbf{v}_1,\dots,\mathbf{v}_n)=\Bigl[\tfrac{\det(L)}{\|\mathbf{v}_1\|\cdots\|\mathbf{v}_n\|}\Bigr]^{1/n}\in(0,1],
+\]
+值近 $1$ 表近正交（好基底，易解題）；值近 $0$ 表歪斜（壞基底，作公鑰）。
+基底轉換 $\mathbf{W}=\mathbf{A}\mathbf{V}$，$\mathbf{A}$ 為么模矩陣（$\det\mathbf{A}=\pm1$）。
+
+\textbf{四個困難問題}（節錄自講義 §1.1.3–§1.1.5）：
+\begin{itemize}
+  \item \textbf{SVP}：求 $\mathbf{v}\in L\setminus\{0\}$ 使 $\|\mathbf{v}\|=\sqrt{\mathbf{v}\cdot\mathbf{v}}$ 最小。
+  \item \textbf{CVP}：給目標 $\mathbf{w}\in\R^m$，求最近 $\mathbf{v}\in L$ 使 $\|\mathbf{w}-\mathbf{v}\|$ 最小。
+  \item \textbf{SBP}（最短基底）：求基底使 $\max_i\|\mathbf{v}_i\|$ 或 $\sum_i\|\mathbf{v}_i\|^2$ 最小。
+  \item \textbf{近似版 apprSVP$_{\Psi(n)}$}：求 $\|\mathbf{v}\|\le\Psi(n)\|\mathbf{v}_{\text{shortest}}\|$（例 $3\sqrt{n}$ 或 $2^{n/2}$）；apprCVP 同理。
+\end{itemize}
+難度關係：一般而言 CVP 不易於 SVP（CVP 為 NP-hard，SVP 在隨機歸約下 NP-hard）。此與報告中「Minkowski 保證短向量\emph{存在}卻不給尋法」的非構造性互相呼應。
+
+%% ════════════════════════════════════════════════════════
+\section{Babai 與 GGH：CVP 的具體化（補強報告 CVP 一頁）}
+
+\begin{maps}{Section 1 之 CVP 頁、BDD 概念}\end{maps}
+
+\textbf{Babai 最近平面（round-off）}：給基底 $\mathbf{V}$ 與目標 $\mathbf{w}$，令 $\mathbf{t}=\mathbf{w}\mathbf{V}^{-1}\in\R^n$，
+取 $a_i=\rd{t_i}$（四捨五入到最近整數），回傳 $\mathbf{v}'=\sum a_i\mathbf{v}_i$。基底愈正交（$\mathcal{H}\to1$）結果愈準。
+
+\textbf{GGH 公鑰系統}（講義 §1.1.9，含 5 維數值範例）：私鑰好基底 $\mathbf{V}$、公鑰壞基底 $\mathbf{W}=\mathbf{U}\mathbf{V}$（$\mathbf{U}$ 么模）。
+\[
+  \text{加密 } \mathbf{c}=\mathbf{m}\mathbf{W}+\mathbf{r}\ (\mathbf{r}\text{ 微擾});\qquad
+  \text{解密 } \rd{\mathbf{c}\mathbf{V}^{-1}}\mathbf{V}\mathbf{W}^{-1}
+  =\rd{\mathbf{m}\mathbf{U}+\mathbf{r}\mathbf{V}^{-1}}\mathbf{U}^{-1}\approx\mathbf{m}.
+\]
+範例中好基底 $\mathcal{H}\approx0.9249$ 可正確解（$\rd{\mathbf{r}\mathbf{V}^{-1}}\approx0$），壞基底 $\mathcal{H}\approx0.0021$ 則失敗。
+這正是報告所述 \textbf{BDD}（有界距離解碼）的雛形：$\mathbf{c}$ 距某格點極近，持好基底者可唯一還原。
+
+%% ════════════════════════════════════════════════════════
+\section{LWE 與其安全歸約（對應報告 Part 1）}
+
+\begin{maps}{Part 1 — LWE：設定、search／decision、歸約}\end{maps}
+
+\begin{definition}[LWE，Regev 2005]
+  $\mathbf{A}\in\Z_q^{m\times n}$，秘密 $\mathbf{s}\in\Z_q^n$，誤差 $\mathbf{e}\leftarrow\chi^m$（離散高斯）：$\mathbf{b}=\mathbf{A}\mathbf{s}+\mathbf{e}\bmod q$。
+  \textbf{Search-LWE} 由 $(\mathbf{A},\mathbf{b})$ 還原 $\mathbf{s}$；\textbf{Decision-LWE} 區分 $(\mathbf{A},\mathbf{b})$ 與均勻隨機。
+\end{definition}
+
+\textbf{加噪音直覺（HackMD 的 mod 13 例）}：無噪音時 $2s_1+3s_2=8,\ 5s_1+s_2=7$ 高斯消去即得 $(s_1,s_2)=(1,2)$；
+加微小噪音 $e\in\{-1,0,1\}$ 後攻擊者只看到 $9,6$，消去法把誤差放大、方程組錯亂；維度上百時無已知（含量子）有效解法。
+
+\textbf{兩項貼合報告的核心性質}：
+\begin{itemize}
+  \item \textbf{worst-case $\to$ average-case 歸約}：破解隨機 LWE $\Rightarrow$ 解最壞情況格難題 GapSVP／SIVP$_\gamma$（$\gamma=\tilde O(n/\alpha)$，量子歸約）——安全性奠基於「最難實例」。
+  \item \textbf{抗量子}：屬格密碼，無 Shor 演算法可利用的週期結構；Regev 原文〈On lattices, learning with errors, random linear codes, and cryptography〉。
+\end{itemize}
+
+%% ════════════════════════════════════════════════════════
+\section{由 LWE 到 Ring-LWE：以代數結構換效率（對應報告 Part 2）}
+
+\begin{maps}{Part 2 — Ring-LWE：環設定、NTT、效率對照}\end{maps}
+
+\textbf{動機（HackMD）}：標準 LWE 最大缺點是矩陣 $\mathbf{A}$ 過大。若取 $n=1024$，$\mathbf{A}$ 為 $1024\times1024$，公鑰極大、每次加密為 $O(n^2)$ 矩陣乘。
+
+\begin{definition}[Ring-LWE / LV10（Lyubashevsky–Peikert–Regev 2010）]
+  $f(x)=x^n+1$（$n=2^k$），$R=\Z[x]/f(x)$，$R_q=\Z_q[x]/f(x)$，$\chi$ 為 $R$ 上窄高斯。
+  秘密 $s\in R_q$、$a\xleftarrow{\$}R_q$、$e_1\leftarrow\chi$：樣本 $b=as+e_1\in R_q$，公開 $(b,a)$。
+\end{definition}
+
+\textbf{效能突破}：公鑰由巨大矩陣 $\mathbf{A}$ 變成單一多項式 $a(x)$，儲存 $O(n^2)\!\to\!O(n)$；
+多項式乘法用數論轉換 NTT（類 FFT），時間 $O(n^2)\!\to\!O(n\log n)$。
+此與報告 Part 2 「分圓環 $\to$ CRT $\to$ NTT」的數論結構完全一致（報告進一步說明 $q\equiv1\pmod{2n}$ 完全分裂、$R_q\cong\mathbb{F}_q^n$ 的代數根源）。
+
+%% ════════════════════════════════════════════════════════
+\section{LWE 家族、NIST 標準與安全基礎（對應報告 Part 3）}
+
+\begin{maps}{Part 3 — 應用與開放問題（Module-LWE、NIST、Ideal-SVP）}\end{maps}
+
+\textbf{LWE 家族分類}（HackMD）：
+\begin{center}\footnotesize
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{>{\bfseries}l l l l}
+\hline
+方案 & 數學結構 & 金鑰／效能 & 安全性與適用 \\
+\hline
+Standard LWE & 矩陣–向量 & 公鑰大 $O(n^2)$、慢 & 無結構漏洞、最保守，少用於實作 \\
+Ring-LWE & $\Z_q[x]/(x^n+1)$ & 公鑰小 $O(n)$、NTT 快 & 結構最多、效率最高 \\
+Module-LWE & 小矩陣（多個多項式） & 介於兩者 & \textbf{NIST 標準 ML-KEM(Kyber)／ML-DSA(Dilithium)} \\
+\hline
+\end{tabular}
+\end{center}
+Module-LWE 完美平衡效能與結構安全，正是報告所述 NIST FIPS 203／204 之基礎。
+
+\textbf{安全基礎與已知攻擊}（講義 §3.1，貼合報告開放問題）：
+\begin{itemize}
+  \item \textbf{BDD（CVP 特例）}：目標 $\mathbf{t}$ 滿足 $\mathrm{dist}(\mathbf{t},L)<\alpha\lambda_1(L)$（$\lambda_1$ 為最短向量長），求最近 $\mathbf{v}\in L$。LWE 本質即 BDD。
+  \item \textbf{gap-SVP}：判定 $\gamma\lambda_1(L)<\lambda_2(L)$（$\gamma\ge1$）。
+  \item \textbf{Ideal-SVP 的結構風險（CDPR16）}：對分圓環主理想之短生成元，給出 $2^{n^{2/3-\varepsilon}}$ 量子攻擊（原文〈Recovering Short Generators of Principal Ideals in Cyclotomic Rings〉）——即報告開放問題中 Cramer et al.（2016）所指：理想格可能比一般格易解，故標準採折衷之 Module-LWE。
+\end{itemize}
+
+\vspace{4pt}
+\noindent\rule{\linewidth}{0.4pt}
+\begin{center}\footnotesize\color{gray}
+  節錄自：HackMD〈LWE \& Ring-LWE〉(sjng)；Drive 49 頁〈格密碼到 FHE 綜述〉(lynndell2010／mutourend2010, 2025)。\\
+  對應原始文獻：Regev (2009)；Lyubashevsky–Peikert–Regev (2013)；Goldreich–Goldwasser–Halevi (GGH, 1997)；Cramer–Ducas–Peikert–Regev (2016)；NIST FIPS 203/204 (2024)。
+\end{center}
+
+\end{document}
