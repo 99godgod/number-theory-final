@@ -155,7 +155,9 @@ def poly_str(p):
     return " + ".join(terms) if terms else "0"
 
 if __name__ == "__main__":
-    q = 7681
+    # 小例選最小可行模數 q=17（質數且 17 ≡ 1 mod 2n=16），
+    # 使係數 (最大 61) 真正被取餘數折回，看得出 mod 運算的作用。
+    q = 17
     n = 8
     assert is_prime(q) and (q - 1) % (2 * n) == 0
 
